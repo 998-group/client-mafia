@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { FaUserAlt, FaEnvelope, FaLock } from 'react-icons/fa';
+import { FaUserAlt, FaEnvelope, FaLock, FaArrowAltCircleLeft } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ username: '',  password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,7 +35,10 @@ const Register = () => {
       />
 
       <div className='absolute top-1/2 left-1/2 py-10 px-5 w-[90%] max-w-md bg-base-300/70 backdrop-blur-md rounded-md -translate-x-1/2 -translate-y-1/2'>
-        <p className='text-white text-2xl font-bold text-center mb-6'>Mafia Game – Register</p>
+        <div className='relative'>
+          <button className='btn btn-sm absolute -top-9 -left-4 z-10' onClick={() => navigate("/login")}><FaArrowAltCircleLeft /></button>
+          <p className='text-white text-2xl font-bold text-center mb-6'>Mafia Game – Register</p>
+        </div>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
 
