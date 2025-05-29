@@ -4,10 +4,14 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../redux/slices/authSlice';
 import { toast } from 'react-toastify';
+import { AiFillEyeInvisible } from "react-icons/ai";
+import { AiFillEye } from "react-icons/ai";
+
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword]=useState("")
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -79,7 +83,7 @@ const Login = () => {
 
           {/* Username input */}
           <div>
-            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white'>
+            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white w-full'>
               <FaUserAlt />
               <input
                 type="text"
@@ -95,7 +99,7 @@ const Login = () => {
 
           {/* Password input */}
           <div>
-            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white'>
+            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white w-full'>
               <FaLock />
               <input
                 type={showPassword ? 'text' : 'password'}
