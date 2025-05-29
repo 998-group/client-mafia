@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const Home = () => {
-  const [leaderBoard] = useState([
+  const [leaderBoard, setLeaderBoard] = useState([
     { username: "Bekzod", role: "admin", email: "bekzodmirzaaliyev27@gmail.com", score: 1200 },
     { username: "Aziz", role: "user", email: "aziz12@mail.com", score: 950 },
     { username: "Shahzod", role: "user", email: "shahzod99@mail.com", score: 870 },
@@ -24,7 +24,7 @@ const Home = () => {
     { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 },
   ]);
 
-  const sortedLeaderBoard = [...leaderBoard].sort((a, b) => b.score - a.score);
+  const sortingLeaderBoard  = leaderBoard.sort((a, b) => b.score - a.score);
 
   return (
     <div className="flex h-screen">
@@ -81,7 +81,6 @@ const Home = () => {
             <p className="font-bold text-3xl tracking-wider">Leaderboard</p>
           </div>
 
-<<<<<<< HEAD
           <div className='flex-1 overflow-y-auto'>
             {
               sortingLeaderBoard.length > 0 ? (
@@ -106,34 +105,6 @@ const Home = () => {
             <button className='btn btn-soft btn-primary'>Create Room</button>
           </div>
       </div>
-=======
-          {/* LIST */}
-          <div className="flex-1 overflow-y-auto divide-y divide-base-200">
-            {sortedLeaderBoard.map((item, index) => {
-              let bg = "";
-              if (index === 0) bg = "bg-green-600 text-white font-bold";
-              else if (index === 1) bg = "bg-green-400 text-white font-bold";
-              else if (index === 2) bg = "bg-green-300 text-white f ont-bold";
-
-              return (
-                <div
-                  key={index}
-                  className={`flex items-center justify-between p-3 ${bg}`}
-                >
-                  <div className="w-10 text-center">{index + 1}</div>
-                  <div className="w-1/3">{item.username}</div>
-                  <div className="w-1/3 text-center capitalize">{item.role}</div>
-                  <div className="w-1/3 text-end">{item.score}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT PANEL (bo‘sh) */}
-      <div className="flex-1 bg-base-300 h-full"></div>
->>>>>>> 741706da487592a30640dad5b3b7316b01902678
     </div>
   );
 };
