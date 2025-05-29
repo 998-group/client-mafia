@@ -4,12 +4,15 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { register } from '../redux/slices/authSlice';
+import { AiFillEyeInvisible } from "react-icons/ai";
+import { AiFillEye } from "react-icons/ai";
 
 const Register = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate()
   const dispatch = useDispatch();
+  const [showPassword, setShowPassword]=useState("")
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -83,13 +86,13 @@ const Register = () => {
 
           {/* Username input */}
           <div>
-            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white'>
+            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white w-full'>
               <FaUserAlt />
               <input
                 type="text"
                 name="username"
                 placeholder="Username"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white'
+                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -99,13 +102,13 @@ const Register = () => {
 
           {/* Password input */}
           <div>
-            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white'>
+            <label className='input input-bordered flex items-center gap-3 bg-white/10 text-white w-full'>
               <FaLock />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white'
+                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
                 value={formData.password}
                 onChange={handleChange}
               />

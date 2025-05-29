@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
 const Home = () => {
-  const [leaderBoard, setLeaderBoard] = useState([
+  const [leaderBoard] = useState([
     { username: "Bekzod", role: "admin", email: "bekzodmirzaaliyev27@gmail.com", score: 1200 },
     { username: "Aziz", role: "user", email: "aziz12@mail.com", score: 950 },
     { username: "Shahzod", role: "user", email: "shahzod99@mail.com", score: 870 },
@@ -21,101 +21,94 @@ const Home = () => {
     { username: "Yulduz", role: "user", email: "yulduz_star@mail.ru", score: 930 },
     { username: "Amir", role: "user", email: "amir88@gmail.com", score: 950 },
     { username: "Shoxrux", role: "user", email: "shoxrux01@mail.com", score: 870 },
-    { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 }
+    { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 },
   ]);
 
-  const sortingLeaderBoard = leaderBoard.sort((a, b) => b.score - a.score)
-
-  console.log("не сортированыый: ", leaderBoard)
-  console.log("sorting: ", sortingLeaderBoard)
-
+  const sortedLeaderBoard = [...leaderBoard].sort((a, b) => b.score - a.score);
 
   return (
-    <div className='flex h-screen'>
-      <div className='flex-1 bg-base-300 h-full flex flex-col p-5 items-center'>
+    <div className="flex h-screen">
+      {/* LEFT PANEL */}
+      <div className="flex-1 bg-base-300 h-full flex flex-col p-5 items-center">
         <figure>
-          <img src="" alt="" className='size-32 rounded-full bg-base-100 border border-primary' />
+          <img
+            src=""
+            alt="User"
+            className="size-32 rounded-full bg-base-100 border border-primary"
+          />
         </figure>
-        <p className='mt-5 font-semibold text-xl'>Anivar Jonka❤️</p>
+        <p className="mt-5 font-semibold text-xl">Anivar Jonka❤️</p>
 
-        <ul className='w-full mt-10 space-y-5'>
-          <li className='flex items-center w-full justify-between'>
-            <p>
-              Role:
-            </p>
-            <p>
-              Admin
-            </p>
+        <ul className="w-full mt-10 space-y-5">
+          <li className="flex justify-between">
+            <p>Role:</p>
+            <p>Admin</p>
+          </li>
+          <li className="flex justify-between">
+            <p>Email:</p>
+            <p>Bekzodkrasavchik@gmail.com</p>
           </li>
 
-          <li className='flex items-center w-full justify-between'>
-            <p>
-              Email:
-            </p>
-            <p>
-              Bekzodkrasavchik@gmail.com
-            </p>
-          </li>
-
-          <li className='flex items-center w-full justify-between'>
-            <p className='font-semibold text-lg w-1/3'>
-              Ban:
-            </p>
-
+          {/* Ban Info */}
+          <li className="flex items-center justify-between gap-2">
+            <p className="font-semibold text-lg w-1/3">Ban:</p>
             <div className="tooltip tooltip-error w-1/3" data-tip="5 дней">
-              <button className="btn btn-soft btn-error">Days</button>
+              <button className="btn btn-soft btn-error w-full">Days</button>
             </div>
-
             <div className="tooltip tooltip-error w-1/3" data-tip="Doni boq bogani uchun">
-              <button className="btn btn-soft btn-error">Reason</button>
+              <button className="btn btn-soft btn-error w-full">Reason</button>
             </div>
           </li>
-          <li className='flex items-center w-full justify-between'>
-            <p className='font-semibold text-lg w-1/3'>
-              Mute:
-            </p>
 
+          {/* Mute Info */}
+          <li className="flex items-center justify-between gap-2">
+            <p className="font-semibold text-lg w-1/3">Mute:</p>
             <div className="tooltip tooltip-error w-1/3" data-tip="5 дней">
-              <button className="btn btn-soft btn-error">Days</button>
+              <button className="btn btn-soft btn-error w-full">Days</button>
             </div>
-
             <div className="tooltip tooltip-error w-1/3" data-tip="Doni boq bogani uchun">
-              <button className="btn btn-soft btn-error">Reason</button>
+              <button className="btn btn-soft btn-error w-full">Reason</button>
             </div>
           </li>
         </ul>
-
       </div>
-      <div className='flex-1  h-full min-w-6/12 p-5'>
-        <div className='h-full w-full rounded-xl bg-base-300 drop-shadow-xl overflow-y-auto flex flex-col'>
-          <div className='flex items-center justify-center gap-5 h-24 bg-error'>
-            <img src="./cup.png" className='size-24' alt="" />
-            <p className='font-bold text-3xl tracking-wider'>Leadboard</p>
+
+      {/* CENTER PANEL */}
+      <div className="flex-1 h-full min-w-6/12 p-5">
+        <div className="h-full w-full rounded-xl bg-base-300 drop-shadow-xl overflow-y-auto flex flex-col">
+          <div className="flex items-center justify-center gap-5 h-24 bg-error">
+            <img src="./cup.png" className="size-24" alt="Cup" />
+            <p className="font-bold text-3xl tracking-wider">Leaderboard</p>
           </div>
 
-          <div className='flex-1 overflow-y-auto'>
-            {
-              sortingLeaderBoard.length > 0 ? (
-                sortingLeaderBoard.map((item, id) => (
-                  <div key={id} className='flex items-center justify-between p-2'>
-                    <div className='w-10'>{id + 1}</div>
-                    <div className='w-1/3'>{item.username}</div>
-                    <div className='w-1/3 text-center'>{item.role}</div>
-                    <div className='w-1/3 text-end'>{item.score}</div>
-                  </div>
-                ))
-              ) : (
-                <p>LeaderBoard is empty</p>
-              )
-            }
+          {/* LIST */}
+          <div className="flex-1 overflow-y-auto divide-y divide-base-200">
+            {sortedLeaderBoard.map((item, index) => {
+              let bg = "";
+              if (index === 0) bg = "bg-green-600 text-white font-bold";
+              else if (index === 1) bg = "bg-green-400 text-white font-bold";
+              else if (index === 2) bg = "bg-green-300 text-white f ont-bold";
+
+              return (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-3 ${bg}`}
+                >
+                  <div className="w-10 text-center">{index + 1}</div>
+                  <div className="w-1/3">{item.username}</div>
+                  <div className="w-1/3 text-center capitalize">{item.role}</div>
+                  <div className="w-1/3 text-end">{item.score}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
-      <div className='flex-1 bg-base-300 h-full'>
 
-      </div>
+      {/* RIGHT PANEL (bo‘sh) */}
+      <div className="flex-1 bg-base-300 h-full"></div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
