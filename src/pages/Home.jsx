@@ -97,7 +97,7 @@ const Home = () => {
             {
               sortingLeaderBoard.length > 0 ? (
                 sortingLeaderBoard.map((item, id) => (
-                  <div key={id} className='flex items-center justify-between p-2'>
+                  <div key={id} className={`flex items-center justify-between p-2 ${id === 2 ? "bg-success/30" : id === 1 ? "bg-success/70" : id === 0 ? "bg-success/100" : ""}`}>
                     <div className='w-10'>{id + 1}</div>
                     <div className='w-1/3'>{item.username}</div>
                     <div className='w-1/3 text-center'>{item.role}</div>
@@ -112,7 +112,10 @@ const Home = () => {
         </div>
       </div>
       <div className='flex-1 bg-base-300 h-full'>
-
+          <div className='flex items-center justify-between p-2 bg-error'>
+            <p className='font-bold text-xl'>Rooms: </p>
+            <button className='btn btn-soft btn-primary'>Create Room</button>
+          </div>
       </div>
     </div>
   )
