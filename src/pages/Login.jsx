@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
 import { FaUserAlt, FaEnvelope, FaLock } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { login } from '../redux/slices/authSlice';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
   };
+
+
 
   const validateForm = () => {
     const newErrors = {};
@@ -18,10 +26,36 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+
     e.preventDefault();
     if (!validateForm()) return;
     console.log('✅ Form valid, sending to backend:', formData);
+    try {
+      const request = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+
+
+      })
+      const response = await request.json()
+      console.log(response);
+
+      if (request.ok) {
+        dispatch(login({ user: response, token: "token" }))
+        navigate("/")
+        toast.success("Login success", { theme: "colored" })
+        
+      }
+      console.log(request);
+    }
+    catch (e) {
+
+
+    }
     // bu yerga API chaqiruv yozish mumkin
   };
 

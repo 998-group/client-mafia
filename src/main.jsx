@@ -13,6 +13,7 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PrivateRouter from './guard/PrivateRouter.jsx';
 import Home from './pages/Home.jsx';
+ import { ToastContainer, toast } from 'react-toastify';
 
 
 const router = createBrowserRouter([
@@ -46,6 +47,7 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <RouterProvider router={router} />
+        <ToastContainer />
       </PersistGate>
     </Provider>
   </StrictMode>,
