@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
+import { useSelector } from "react-redux"
+import { toast } from "react-toastify"
+import { useNavigate } from "react-router-dom"
+import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { ImEnter } from "react-icons/im";
 
 const Home = () => {
   const [leaderBoard, setLeaderBoard] = useState([
@@ -23,8 +28,78 @@ const Home = () => {
     { username: "Shoxrux", role: "user", email: "shoxrux01@mail.com", score: 870 },
     { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 },
   ]);
+  const user = useSelector(state => state.auth.user.user)
+  const [name, setName] = useState("")
+  const [rooms, setRooms] = useState([])
+  const [createRoomID, setCreateRoomID] = useState(null)
+  const navigate = useNavigate()
 
-  const sortingLeaderBoard  = leaderBoard.sort((a, b) => b.score - a.score);
+  const sortingLeaderBoard = leaderBoard.sort((a, b) => b.score - a.score);
+
+  const createRoom = async () => {
+    console.log("ROOM: ", name)
+    try {
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/game/create-room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostId: user._id, roomName: name })
+      })
+
+      const response = await request.json()
+      console.log("RESPONSE", response)
+
+      if (request.ok) {
+        toast.success("Room created successfully", { theme: "colored" })
+        setCreateRoomID(response.newGame?.roomId)
+        // navigate(`/room/${response.newGame?.roomId}`)
+        JoinRoom(response.newGame?.roomId)
+      }
+
+    } catch (e) {
+      console.log("server error", e)
+    } finally {
+
+    }
+  }
+
+  const JoinRoom = async (roomID) => {
+    try {
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user._id })
+      })
+
+      const response = await request.json()
+      console.log("RESPONSE", response)
+
+      if (request.ok) {
+        toast.success("Room joined successfully", { theme: "colored" })
+        navigate(`/room/${roomID}/waiting`)
+      }
+
+    } catch (e) {
+      console.log("server error: ", e)
+    } finally {
+
+    }
+  }
+
+  const getRoom = async () => {
+    try {
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/all`)
+      const response = await request.json()
+      console.log("RES", response)
+      setRooms(response.games)
+    } catch (e) {
+      console.log("server error: ", e)
+    }
+  }
+
+  useEffect(() => {
+    getRoom()
+  }, [])
+
 
   return (
     <div className="flex h-screen">
@@ -99,11 +174,54 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className='flex-1 bg-base-300 h-full'>
-          <div className='flex items-center justify-between p-2 bg-error'>
-            <p className='font-bold text-xl'>Rooms: </p>
-            <button className='btn btn-soft btn-primary'>Create Room</button>
-          </div>
+      <div className='flex-1 bg-base-300 h-full flex flex-col'>
+        <div className='flex items-center justify-between p-2 bg-error'>
+          <p className='font-bold text-xl'>Rooms: </p>
+          <button className='btn btn-soft btn-error' onClick={() => document.getElementById('my_modal_1').showModal()}>Create Room</button>
+          <dialog id="my_modal_1" className="modal">
+            <div className="modal-box">
+              <p className="font-bold text-lg mb-4">Hello {user?.username}! Please Create Room</p>
+              <input type="text" placeholder="Room Name" className="input input-primary w-full" onChange={(e) => setName(e.target.value)} />
+              <div className="modal-action">
+                <form method="dialog">
+                  <button className="btn btn-soft btn-error mr-5">Close</button>
+                  <button className="btn btn-soft btn-success min-w-[230px]" onClick={createRoom}>Create</button>
+                </form>
+              </div>
+            </div>
+          </dialog>
+        </div>
+        <div className="flex-1 flex flex-col gap-1 overflow-y-auto">
+          {
+            rooms.length > 0 ? (
+              <>
+                <div>
+                  <div className="flex items-center justify-between p-2">
+                    <div className='w-10'>ID</div>
+                    <div className='w-1/4'>Room</div>
+                    <div className='w-1/4 text-center'>Players</div>
+                    <div className='w-1/4 text-end'>Phase</div>
+                    <div className='w-1/4 text-end'>Action</div>
+                  </div>
+                </div>
+                {rooms.map((item, id) => (
+                  <div key={id} className="flex items-center text-xs justify-between p-2">
+                    <div className='w-10'>{id + 1}</div>
+                    <div className='w-1/4'>{item.roomName}</div>
+                    <div className='w-1/4 text-center'>{item.players.length}</div>
+                    <div className='w-1/4 text-end capitalize'>{item.phase}</div>
+                    <div className="w-1/4 flex items-center gap-1 justify-end">
+                      <button className="btn btn-xs btn-soft btn-error"><MdOutlineRemoveRedEye /></button>
+                      <button className="btn btn-xs btn-soft btn-error"><ImEnter /></button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p>Rooms is empty</p>
+            )
+          }
+        </div>
       </div>
     </div>
   );

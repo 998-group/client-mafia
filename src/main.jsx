@@ -14,6 +14,7 @@ import Register from './pages/Register.jsx';
 import PrivateRouter from './guard/PrivateRouter.jsx';
 import Home from './pages/Home.jsx';
  import { ToastContainer, toast } from 'react-toastify';
+import Room from './pages/Room.jsx';
 
 
 const router = createBrowserRouter([
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
     {
       path: "/register",
       element: <Register/>
+    },
+    {
+      path: "/room/:roomId/waiting",
+      element: <Room />
     }
 
 ]);
