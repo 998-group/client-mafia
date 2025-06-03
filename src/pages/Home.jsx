@@ -4,6 +4,7 @@ import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
+import { set } from "mongoose";
 
 const Home = () => {
   const [leaderBoard, setLeaderBoard] = useState([
@@ -29,10 +30,12 @@ const Home = () => {
     { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 },
   ]);
   const user = useSelector(state => state.auth.user.user)
+  console.log("SELECTOR: ", user)
   const [name, setName] = useState("")
   const [rooms, setRooms] = useState([])
   const [createRoomID, setCreateRoomID] = useState(null)
   const navigate = useNavigate()
+  const [roomInfo, setRoomInfo] = useState()
 
   const sortingLeaderBoard = leaderBoard.sort((a, b) => b.score - a.score);
 
@@ -63,11 +66,12 @@ const Home = () => {
   }
 
   const JoinRoom = async (roomID) => {
+    console.log("USER: ", user._id)
     try {
       const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user._id })
+        body: JSON.stringify({ userId: user?.user?.id })
       })
 
       const response = await request.json()
@@ -81,6 +85,23 @@ const Home = () => {
     } catch (e) {
       console.log("server error: ", e)
     } finally {
+
+    }
+  }
+
+
+  const getRoominfo = async (roomId) => {
+    document.getElementById('my_modal_2').showModal()
+
+    console.log("ROOM ID: ", roomId);
+
+    try {
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/room/${roomId}`)
+      const response = await request.json()
+      console.log("Room Info", response.players);
+      setRoomInfo(response.players)
+    } catch (error) {
+      console.log(error);
 
     }
   }
@@ -211,8 +232,33 @@ const Home = () => {
                     <div className='w-1/4 text-center'>{item.players.length}</div>
                     <div className='w-1/4 text-end capitalize'>{item.phase}</div>
                     <div className="w-1/4 flex items-center gap-1 justify-end">
-                      <button className="btn btn-xs btn-soft btn-error"><MdOutlineRemoveRedEye /></button>
-                      <button className="btn btn-xs btn-soft btn-error"><ImEnter /></button>
+                      <button className="btn btn-xs btn-soft btn-error" onClick={() => getRoominfo(item?.roomId)}><MdOutlineRemoveRedEye /></button>
+                      <dialog id="my_modal_2" className="modal">
+                        <div className="modal-box">
+                          <p className="font-bold text-lg">Players in room: {item.roomName}</p>
+                          <div className="flex flex-col gap-2">
+                            {
+                              roomInfo?.length > 0 ? (
+                                roomInfo.map((item, id) => (
+                                  <div className="flex items-center justify-between">
+                                    <div>{item.userId.username}</div>
+                                    <div>{item.isAlive}</div>
+                                    <div>{item.isReady}</div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p>Players is empty</p>
+                              )
+                            }
+                          </div>
+                          <div className="modal-action">
+                            <form method="dialog">
+                              <button className="btn" onClick={() => document.getElementById('my_modal_2').close()}>Close</button>
+                            </form>
+                          </div>
+                        </div>
+                      </dialog>
+                      <button className="btn btn-xs btn-soft btn-error" onClick={() => JoinRoom(item?.roomId)}><ImEnter /></button>
                     </div>
                   </div>
                 ))}
