@@ -120,7 +120,7 @@ const Home = () => {
   useEffect(() => {
     getRoom()
   }, [])
-
+console.log("USER: ", user)
 
   return (
     <div className="flex h-screen">
@@ -128,12 +128,12 @@ const Home = () => {
       <div className="flex-1 bg-base-300 h-full flex flex-col p-5 items-center">
         <figure>
           <img
-            src=""
+            src={user?.user?.image}
             alt="User"
             className="size-32 rounded-full bg-base-100 border border-primary"
           />
         </figure>
-        <p className="mt-5 font-semibold text-xl">Anivar Jonka❤️</p>
+        <p className="mt-5 font-semibold text-xl">{user?.user?.username}</p>
 
         <ul className="w-full mt-10 space-y-5">
           <li className="flex justify-between">
