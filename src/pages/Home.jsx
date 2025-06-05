@@ -67,16 +67,16 @@ const Home = () => {
   }
 
   const JoinRoom = async (roomID) => {
-    console.log("USER: ", user._id)
+    console.log("USER: ", user)
     try {
       const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.user?.id })
+        body: JSON.stringify({ userId: user.id })
       })
 
       const response = await request.json()
-      console.log("RESPONSE", response)
+      console.log("RESPONSE", response.message)
 
       if (request.ok) {
         toast.success("Room joined successfully", { theme: "colored" })

@@ -49,7 +49,7 @@ const Login = () => {
       console.log(response);
 
       if (request.ok) {
-        dispatch(login({ user: response, token: "token" }))
+        dispatch(login({ user: response.user, token: "token" }))
         navigate("/")
         toast.success("Login success", { theme: "colored" })
         
