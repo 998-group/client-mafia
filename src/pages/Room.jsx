@@ -1,15 +1,20 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
+import socket from '../socket';
+import { useSelector } from 'react-redux';
 
 const Room = () => {
     const navigate = useNavigate();
-    const roomId = 'ABC123'; // 🔁 Dinamik qilsa ham bo'ladi
-    const players = [
-        { id: 1, username: 'Bekzod' },
-        { id: 2, username: 'Ali' },
-        { id: 3, username: 'Sara' },
-    ];
+    const { roomId } = useParams()
+    const user = useSelector(state => state.auth.user.user)
+    const [players, setPlayers] = useState([]);
+    // const roomId = 'ABC123'; // 🔁 Dinamik qilsa ham bo'ladi
+    // const players = [
+    //     { id: 1, username: 'Bekzod' },
+    //     { id: 2, username: 'Ali' },
+    //     { id: 3, username: 'Sara' },
+    // ];
 
     const joinedPlayer = async () => {
         try {
@@ -28,6 +33,29 @@ const Room = () => {
         navigate('/');
     };
 
+    useEffect(() => {
+        socket.emit("join_room", { roomId: roomId, userId: user.user })
+    }, [user, roomId])
+
+    useEffect(() => {
+        const handlePlayerJoined = (data) => {
+            setPlayers((prevPlayers) => {
+                const exists = prevPlayers.some(p => p.userId._id === data.userId._id);
+                if (!exists) {
+                    return [...prevPlayers, data];
+                }
+                return prevPlayers;
+            });
+        };
+
+        socket.on("player_joined", handlePlayerJoined);
+
+        return () => {
+            socket.off("player_joined", handlePlayerJoined);
+        };
+    }, []);
+
+
     return (
         <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
             <div className="w-full max-w-3xl bg-base-100 shadow-xl rounded-2xl p-6 space-y-6">
@@ -43,7 +71,7 @@ const Room = () => {
                             className="flex items-center gap-3 p-3 bg-base-300 rounded-xl shadow-md"
                         >
                             <FaUser className="text-primary text-xl" />
-                            <span className="text-base font-medium">{player.username}</span>
+                            <span className="text-base font-medium">{player.userId.username}</span>
                         </div>
                     ))}
                 </div>

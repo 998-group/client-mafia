@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
 import { set } from "mongoose";
+import socket from "../socket"
 
 const Home = () => {
   const [leaderBoard, setLeaderBoard] = useState([
@@ -87,8 +88,15 @@ const Home = () => {
     } finally {
 
     }
+
   }
 
+
+  useEffect(() => {
+    socket.on("player_joined", ({ userId }) => {
+      console.log("PLAYER JOINED: ", userId)
+    })
+  }, [])
 
   const getRoominfo = async (roomId) => {
     document.getElementById('my_modal_2').showModal()
@@ -120,7 +128,7 @@ const Home = () => {
   useEffect(() => {
     getRoom()
   }, [])
-console.log("USER: ", user)
+  console.log("USER: ", user)
 
   return (
     <div className="flex h-screen">
