@@ -29,7 +29,7 @@ const Room = () => {
     }
 
     const handleLeave = () => {
-        // socket.emit("leave_room", { roomId, userId }) // agar socket ishlatsa
+        socket.emit("leave_room", { roomId, userId: user._id });
         navigate('/');
     };
 
