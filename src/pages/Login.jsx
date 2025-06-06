@@ -14,8 +14,6 @@ const Login = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword]=useState("")
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

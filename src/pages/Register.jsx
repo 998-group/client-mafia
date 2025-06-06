@@ -2,23 +2,16 @@ import React, { useState } from 'react';
 import { FaUserAlt, FaEnvelope, FaLock, FaArrowAltCircleLeft } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-import { register } from '../redux/slices/authSlice';
-import { toast } from "react-toastify";
-=======
 import { toast } from 'react-toastify';
 import { register } from '../redux/slices/authSlice';
 import { AiFillEyeInvisible } from "react-icons/ai";
 import { AiFillEye } from "react-icons/ai";
 
->>>>>>> cc4b4089a55904f800ea916a1645e6a7f43a80b1
 const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate()
-  const dispatch = useDispatch();
   const [showPassword, setShowPassword]=useState("")
 
   const handleChange = (e) => {
@@ -99,7 +92,7 @@ const Register = () => {
                 type="text"
                 name="username"
                 placeholder="Username"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
+                className='bg-transparent outline-none  placeholder-white/80 text-white w-full'
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -115,7 +108,7 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
+                className='bg-transparent outline-none  placeholder-white/80 text-white w-full'
                 value={formData.password}
                 onChange={handleChange}
               />
