@@ -13,8 +13,9 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PrivateRouter from './guard/PrivateRouter.jsx';
 import Home from './pages/Home.jsx';
-import { ToastContainer } from "react-toastify";
-import Games from './pages/Games.jsx';
+ import { ToastContainer, toast } from 'react-toastify';
+import Room from './pages/Room.jsx';
+
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
     {
       path: "/register",
       element: <Register/>
+    },
+    {
+      path: "/room/:roomId/waiting",
+      element: <Room />
     }
 
 ]);
@@ -51,7 +56,7 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <RouterProvider router={router} />
-        <ToastContainer/>
+        <ToastContainer />
       </PersistGate>
     </Provider>
   </StrictMode>,
