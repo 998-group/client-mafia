@@ -35,34 +35,7 @@ const Login = () => {
     if (!validateForm()) return;
     console.log('✅ Form valid, sending to backend:', formData);
     try {
-      const request = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-
-
-      })
-      const response = await request.json()
-      console.log(response);
-
-      if (request.ok) {
-        dispatch(login({ user: response.user, token: "token" }))
-        navigate("/")
-        toast.success("Login success", { theme: "colored" })
-        
-      }
-      console.log(request);
-    }
-    catch (e) {
-
-
-    }
-    // bu yerga API chaqiruv yozish mumkin
-
-    try {
-      const request = await fetch("http://localhost:5000/api/auth/login", {
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -72,7 +45,7 @@ const Login = () => {
       if (!request.ok) {
         throw new Error(data.error);
       };
-      dispatch(login());
+      dispatch(login(data));
       navigate("/")
       toast.success("Logged successfully");
     } catch (e) {

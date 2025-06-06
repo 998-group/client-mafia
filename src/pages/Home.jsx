@@ -4,7 +4,6 @@ import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
-import { set } from "mongoose";
 import socket from "../socket"
 
 const Home = () => {
@@ -30,23 +29,21 @@ const Home = () => {
     { username: "Shoxrux", role: "user", email: "shoxrux01@mail.com", score: 870 },
     { username: "Otabek", role: "user", email: "otabek@team.com", score: 990 },
   ]);
-  const user = useSelector(state => state.auth.user.user)
-  console.log("SELECTOR: ", user)
+  const user = useSelector(state => state?.auth?.user)
   const [name, setName] = useState("")
   const [rooms, setRooms] = useState([])
   const [createRoomID, setCreateRoomID] = useState(null)
   const navigate = useNavigate()
   const [roomInfo, setRoomInfo] = useState()
-
+  console.log("USER: ", user)
   const sortingLeaderBoard = leaderBoard.sort((a, b) => b.score - a.score);
 
   const createRoom = async () => {
-    console.log("ROOM: ", name)
     try {
       const request = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/game/create-room", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: user._id, roomName: name })
+        body: JSON.stringify({ hostId: user?.user?._id, roomName: name })
       })
 
       const response = await request.json()
@@ -67,12 +64,11 @@ const Home = () => {
   }
 
   const JoinRoom = async (roomID) => {
-    console.log("USER: ", user)
     try {
       const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id })
+        body: JSON.stringify({ userId: user?.user?._id })
       })
 
       const response = await request.json()
@@ -128,7 +124,7 @@ const Home = () => {
   useEffect(() => {
     getRoom()
   }, [])
-  console.log("USER: ", user)
+
 
   return (
     <div className="flex h-screen">
@@ -146,11 +142,7 @@ const Home = () => {
         <ul className="w-full mt-10 space-y-5">
           <li className="flex justify-between">
             <p>Role:</p>
-            <p>Admin</p>
-          </li>
-          <li className="flex justify-between">
-            <p>Email:</p>
-            <p>Bekzodkrasavchik@gmail.com</p>
+            <p>{user?.user?.role}</p>
           </li>
 
           {/* Ban Info */}
@@ -242,30 +234,58 @@ const Home = () => {
                     <div className="w-1/4 flex items-center gap-1 justify-end">
                       <button className="btn btn-xs btn-soft btn-error" onClick={() => getRoominfo(item?.roomId)}><MdOutlineRemoveRedEye /></button>
                       <dialog id="my_modal_2" className="modal">
-                        <div className="modal-box">
-                          <p className="font-bold text-lg">Players in room: {item.roomName}</p>
-                          <div className="flex flex-col gap-2">
-                            {
-                              roomInfo?.length > 0 ? (
-                                roomInfo.map((item, id) => (
-                                  <div className="flex items-center justify-between">
-                                    <div>{item.userId.username}</div>
-                                    <div>{item.isAlive}</div>
-                                    <div>{item.isReady}</div>
+                        <div className="modal-box max-w-2xl">
+                          <h2 className="font-bold text-xl mb-4">
+                            Players in room: <span className="text-primary">{item.roomName}</span>
+                          </h2>
+
+                          <div className="grid gap-3">
+                            {roomInfo?.length > 0 ? (
+                              roomInfo.map((player, id) => (
+                                <div
+                                  key={id}
+                                  className="flex items-center justify-between bg-base-200 p-4 rounded-xl shadow"
+                                >
+                                  <div className="font-semibold text-base-content">
+                                    {player.userId.username}
                                   </div>
-                                ))
-                              ) : (
-                                <p>Players is empty</p>
-                              )
-                            }
+
+                                  <div className="flex gap-2 items-center">
+                                    <span
+                                      className={`badge px-3 py-1 text-xs font-semibold ${player.isAlive ? 'badge-success' : 'badge-error'
+                                        }`}
+                                    >
+                                      {player.isAlive ? 'Alive' : 'Dead'}
+                                    </span>
+
+                                    <span
+                                      className={`badge px-3 py-1 text-xs font-semibold ${player.isReady ? 'badge-info' : 'badge-warning'
+                                        }`}
+                                    >
+                                      {player.isReady ? 'Ready' : 'Not ready'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-base-content">No players in this room.</p>
+                            )}
                           </div>
-                          <div className="modal-action">
+
+                          <div className="modal-action mt-5">
                             <form method="dialog">
-                              <button className="btn" onClick={() => document.getElementById('my_modal_2').close()}>Close</button>
+                              <button
+                                className="btn"
+                                onClick={() => document.getElementById('my_modal_2').close()}
+                              >
+                                Close
+                              </button>
                             </form>
                           </div>
                         </div>
                       </dialog>
+
+
                       <button className="btn btn-xs btn-soft btn-error" onClick={() => JoinRoom(item?.roomId)}><ImEnter /></button>
                     </div>
                   </div>

@@ -7,9 +7,9 @@ import socket from '../socket';
 const Room = () => {
   const navigate = useNavigate();
   const { roomId } = useParams();
-  const auth = useSelector(state => state.auth); // Reduxdan token, user olinadi
-  const user = auth.user; // { id, username }
+  const auth = useSelector(state => state.auth?.user?.user); // Reduxdan token, user olinadi
 
+  const user = auth; // { id, username }
   const [players, setPlayers] = useState([]);
 
   // ⬅️ Kirishda `join_room` jo'natish
@@ -17,9 +17,11 @@ const Room = () => {
     if (user && roomId) {
       socket.emit('join_room', {
         roomId,
-        userId: user.id,
+        userId: user._id,
         username: user.username,
       });
+      console.log("userID: ", user);
+
     }
 
     // ➡️ Chiqishda `leave_room`
@@ -27,7 +29,7 @@ const Room = () => {
       if (user && roomId) {
         socket.emit('leave_room', {
           roomId,
-          userId: user.id,
+          userId: user._id,
         });
       }
     };
@@ -47,7 +49,7 @@ const Room = () => {
   }, []);
 
   const handleLeave = () => {
-    socket.emit("leave_room", { roomId, userId: user.id });
+    socket.emit("leave_room", { roomId, userId: user._id });
     navigate('/');
   };
 
