@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { FaUserAlt, FaEnvelope, FaLock } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../redux/slices/authSlice';
+import { toast } from 'react-toastify';
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
 
@@ -18,11 +23,30 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     console.log('✅ Form valid, sending to backend:', formData);
     // bu yerga API chaqiruv yozish mumkin
+
+    try {
+      const request = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      const data = await request.json();
+      console.log("DATA: ", data);
+      if (!request.ok) {
+        throw new Error(data.error);
+      };
+      dispatch(login());
+      navigate("/")
+      toast.success("Logged successfully");
+    } catch (e) {
+      console.error("Server error: ", e.message);
+      toast.error(e.message);
+    }
   };
 
   return (
@@ -71,7 +95,7 @@ const Login = () => {
 
           <div className='flex items-center justify-center'>
             <Link to={"/register"} className='link link-error text-center'>
-              Do you have account?
+              Do you have not account?
             </Link>
           </div>
         </form>

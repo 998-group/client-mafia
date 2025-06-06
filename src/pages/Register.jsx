@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { FaUserAlt, FaEnvelope, FaLock, FaArrowAltCircleLeft } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-
+import { register } from '../redux/slices/authSlice';
+import { toast } from "react-toastify";
 const Register = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate()
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,11 +22,29 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     console.log('✅ Form valid, sending to backend:', formData);
     // bu yerga API chaqiruv yozish mumkin
+    try{
+      const request = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {"Content-Type" : "application/json"},
+        body: JSON.stringify(formData)
+      });
+      const data = await request.json(formData);
+      console.log("DATA: ", data);
+      if(!request.ok) {
+        throw new Error(data.error);
+      }
+      dispatch(register(data));
+      navigate("/");
+      toast.success("Register successfully");
+    } catch(e) {
+      console.log(e.message);
+      toast.error(e.message)
+    }
   };
 
   return (
