@@ -48,6 +48,21 @@ const Room = () => {
     };
   }, []);
 
+  const handleReady = () => {
+    socket.emit("ready", { roomId, userId: user._id });
+    
+  };
+
+  useEffect(() => {
+    socket.on("notification", (data) => console.log(data));
+    socket.on("start_game" , () => navigate(`/room/${roomId}/playing`));
+    return () => {
+      socket.off("notification");
+      socket.off("start_game");
+    }
+  }, [])
+  
+
   const handleLeave = () => {
     socket.emit("leave_room", { roomId, userId: user._id });
     navigate('/');
@@ -80,9 +95,12 @@ const Room = () => {
           ))}
         </div>
 
-        <div className="text-center pt-4">
+        <div className="flex items-center justify-center gap-5 text-center pt-4">
           <button className="btn btn-error btn-wide" onClick={handleLeave}>
             Leave Room
+          </button>
+          <button className="btn btn-success btn-wide" onClick={handleReady}>
+            Start Game
           </button>
         </div>
       </div>

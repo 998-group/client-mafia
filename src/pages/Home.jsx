@@ -64,20 +64,26 @@ const Home = () => {
   }
 
   const JoinRoom = async (roomID) => {
+    console.log("USER:", user?.user?._id)
     try {
-      const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.user?._id })
+      // const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomID}`, {
+      //   method: "PUT",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ userId: user?.user?._id })
+      // })
+      await socket.emit("join_room", { roomId: roomID, userId: user?.user?._id, username: user.user.username })
+      await socket.on("joined_room", (data) => {
+        console.log("JOINED ROOM: ", data)
+        navigate(`/room/${data.roomId}/waiting`)
       })
+      // const response = await request.json()
+      // console.log("RESPONSE", response.message)
 
-      const response = await request.json()
-      console.log("RESPONSE", response.message)
+      // if (request.ok) {
+      //   toast.success("Room joined successfully", { theme: "colored" })
+      //   navigate(`/room/${roomID}/waiting`)
+      // }
 
-      if (request.ok) {
-        toast.success("Room joined successfully", { theme: "colored" })
-        navigate(`/room/${roomID}/waiting`)
-      }
 
     } catch (e) {
       console.log("server error: ", e)
@@ -92,6 +98,7 @@ const Home = () => {
     socket.on("player_joined", ({ userId }) => {
       console.log("PLAYER JOINED: ", userId)
     })
+
   }, [])
 
   const getRoominfo = async (roomId) => {
