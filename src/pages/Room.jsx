@@ -23,16 +23,6 @@ const Room = () => {
       console.log("userID: ", user);
 
     }
-
-    // ➡️ Chiqishda `leave_room`
-    return () => {
-      if (user && roomId) {
-        socket.emit('leave_room', {
-          roomId,
-          userId: user._id,
-        });
-      }
-    };
   }, [user, roomId]);
 
   // 🟢 Real-time playerlar holatini olish
