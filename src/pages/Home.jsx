@@ -202,6 +202,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+      
+      {/* Right */}
       <div className='flex-1 bg-base-300 h-full flex flex-col'>
         <div className='flex items-center justify-between p-2 bg-error'>
           <p className='font-bold text-xl'>Rooms: </p>
