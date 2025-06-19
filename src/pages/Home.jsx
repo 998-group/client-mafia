@@ -30,6 +30,10 @@ const Home = () => {
     return () => socket.off("update_rooms");
   }, []);
 
+  useEffect(() => {
+    socket.emit("request_rooms", "Bekzodkrasavchik");
+  }, []);
+
   // 🎯 Redirect to waiting room after joining
   useEffect(() => {
     socket.on("joined_room", (room) => {
@@ -103,9 +107,8 @@ const Home = () => {
             {leaderBoard.map((item, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between p-2 ${
-                  idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
-                }`}
+                className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
+                  }`}
               >
                 <div className="w-10">{idx + 1}</div>
                 <div className="w-1/3">{item.username}</div>
