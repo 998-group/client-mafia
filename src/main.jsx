@@ -13,41 +13,52 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PrivateRouter from './guard/PrivateRouter.jsx';
 import Home from './pages/Home.jsx';
- import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import Room from './pages/Room.jsx';
 import Games from './pages/Games.jsx';
+import Game from "./pages/Game.jsx"
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
-    <PrivateRouter>
-      <App/>
-    </PrivateRouter>
-  ),
-  children: [
-    {
-      path: "/",
-      element: <Home/>
-    },
-    {
-      path: "/games",
-      element: <Games/>
-    }
-  ]
+      <PrivateRouter>
+        <App />
+      </PrivateRouter>
+    ),
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      },
+      {
+        path: "/games",
+        element: <Games />
+      }
+    ]
   },
-    {
-      path: "/login",
-      element: <Login/>
-    },
-    {
-      path: "/register",
-      element: <Register/>
-    },
-    {
-      path: "/room/:roomId/waiting",
-      element: <Room />
-    }
+  {
+    path: "/login",
+    element: <Login />
+  },
+  {
+    path: "/register",
+    element: <Register />
+  },
+  {
+    path: "/room/:roomId/waiting",
+    element:
+      <PrivateRouter>
+        <Room />
+      </PrivateRouter>
+  },
+  {
+    path: "/room/:roomId/playing",
+    element:
+      <PrivateRouter>
+        <Game />
+      </PrivateRouter>
+  }
 
 ]);
 
