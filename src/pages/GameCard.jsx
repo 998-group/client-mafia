@@ -4,8 +4,6 @@ const GameCard = () => {
 
     const cards = [
         {role: "Mafia", title: "Sizning rolingiz mafiya endi siz xohlagan odamingizni o'ldira olasiz", img: "https://e1.pxfuel.com/desktop-wallpaper/834/909/desktop-wallpaper-3840x2160-mafia-3-logo-art-games-mafia-3.jpg" },
-      
-
     ]
     return (
         <div className='overflow-y-auto pl-3'>
