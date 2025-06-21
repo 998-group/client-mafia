@@ -1,89 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
-import socket from '../socket';
 import { useSelector } from 'react-redux';
+import socket from '../socket';
 
 const Room = () => {
-    const navigate = useNavigate();
-    const { roomId } = useParams()
-    const user = useSelector(state => state.auth.user.user)
-    const [players, setPlayers] = useState([]);
-    // const roomId = 'ABC123'; // 🔁 Dinamik qilsa ham bo'ladi
-    // const players = [
-    //     { id: 1, username: 'Bekzod' },
-    //     { id: 2, username: 'Ali' },
-    //     { id: 3, username: 'Sara' },
-    // ];
+  const navigate = useNavigate();
+  const { roomId } = useParams();
+  const auth = useSelector(state => state.auth?.user?.user); // Reduxdan token, user olinadi
 
-    const joinedPlayer = async () => {
-        try {
-            const request = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/join-room/${roomId}`, {
+  const user = auth; // { id, username }
+  const [players, setPlayers] = useState([]);
 
-            })
-        } catch (e) {
+  // ⬅️ Kirishda `join_room` jo'natish
+  useEffect(() => {
+    if (user && roomId) {
+      socket.emit('join_room', {
+        roomId,
+        userId: user._id,
+        username: user.username,
+      });
+      console.log("userID: ", user);
 
-        } finally {
-
-        }
     }
+  }, [user, roomId]);
 
-    const handleLeave = () => {
-        // socket.emit("leave_room", { roomId, userId }) // agar socket ishlatsa
-        navigate('/');
+  // 🟢 Real-time playerlar holatini olish
+  useEffect(() => {
+    const handleUpdatePlayers = (playersFromServer) => {
+      setPlayers(playersFromServer);
     };
 
-    useEffect(() => {
-        socket.emit("join_room", { roomId: roomId, userId: user.user })
-    }, [user, roomId])
+    socket.on('update_players', handleUpdatePlayers);
 
-    useEffect(() => {
-        const handlePlayerJoined = (data) => {
-            setPlayers((prevPlayers) => {
-                const exists = prevPlayers.some(p => p.userId._id === data.userId._id);
-                if (!exists) {
-                    return [...prevPlayers, data];
-                }
-                return prevPlayers;
-            });
-        };
+    return () => {
+      socket.off('update_players', handleUpdatePlayers);
+    };
+  }, []);
 
-        socket.on("player_joined", handlePlayerJoined);
+  const handleReady = () => {
+    socket.emit("ready", { roomId, userId: user._id });
+    
+  };
 
-        return () => {
-            socket.off("player_joined", handlePlayerJoined);
-        };
-    }, []);
+  useEffect(() => {
+    socket.on("notification", (data) => console.log(data));
+    socket.on("start_game" , () => navigate(`/room/${roomId}/playing`));
+    return () => {
+      socket.off("notification");
+      socket.off("start_game");
+    }
+  }, [])
+  
 
+  const handleLeave = () => {
+    socket.emit("leave_room", { roomId, userId: user._id });
+    navigate('/');
+  };
 
-    return (
-        <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
-            <div className="w-full max-w-3xl bg-base-100 shadow-xl rounded-2xl p-6 space-y-6">
-                <div className="text-center">
-                    <h2 className="text-3xl font-bold text-primary">🏠 Room: <span className="text-secondary">{roomId}</span></h2>
-                    <p className="text-sm text-base-content/70">Waiting for players to join...</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {players.map((player) => (
-                        <div
-                            key={player.id}
-                            className="flex items-center gap-3 p-3 bg-base-300 rounded-xl shadow-md"
-                        >
-                            <FaUser className="text-primary text-xl" />
-                            <span className="text-base font-medium">{player.userId.username}</span>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="text-center pt-4">
-                    <button className="btn btn-error btn-wide" onClick={handleLeave}>
-                        Leave Room
-                    </button>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-3xl bg-base-100 shadow-xl rounded-2xl p-6 space-y-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-primary">
+            🏠 Room: <span className="text-secondary">{roomId}</span>
+          </h2>
+          <p className="text-sm text-base-content/70">Waiting for players to join...</p>
         </div>
-    );
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {players.map((player) => (
+            <div
+              key={player.userId}
+              className="flex items-center gap-3 p-3 bg-base-300 rounded-xl shadow-md"
+            >
+              <FaUser className="text-primary text-xl" />
+              <div className="flex flex-col">
+                <span className="text-base font-medium">{player.username}</span>
+                <span className={`text-xs ${player.isReady ? 'text-success' : 'text-warning'}`}>
+                  {player.isReady ? 'Ready' : 'Not ready'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-5 text-center pt-4">
+          <button className="btn btn-error btn-wide" onClick={handleLeave}>
+            Leave Room
+          </button>
+          <button className="btn btn-success btn-wide" onClick={handleReady}>
+            Start Game
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Room;

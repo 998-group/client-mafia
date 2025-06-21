@@ -8,10 +8,10 @@ import { AiFillEyeInvisible } from "react-icons/ai";
 import { AiFillEye } from "react-icons/ai";
 
 const Register = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate()
-  const dispatch = useDispatch();
   const [showPassword, setShowPassword]=useState("")
 
   const handleChange = (e) => {
@@ -92,7 +92,7 @@ const Register = () => {
                 type="text"
                 name="username"
                 placeholder="Username"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
+                className='bg-transparent outline-none  placeholder-white/80 text-white w-full'
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -108,7 +108,7 @@ const Register = () => {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
-                className='bg-transparent outline-none w-full placeholder-white/80 text-white w-full'
+                className='bg-transparent outline-none  placeholder-white/80 text-white w-full'
                 value={formData.password}
                 onChange={handleChange}
               />

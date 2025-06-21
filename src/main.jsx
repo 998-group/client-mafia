@@ -15,7 +15,7 @@ import PrivateRouter from './guard/PrivateRouter.jsx';
 import Home from './pages/Home.jsx';
  import { ToastContainer, toast } from 'react-toastify';
 import Room from './pages/Room.jsx';
-
+import Games from './pages/Games.jsx';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +29,10 @@ const router = createBrowserRouter([
     {
       path: "/",
       element: <Home/>
+    },
+    {
+      path: "/games",
+      element: <Games/>
     }
   ]
   },

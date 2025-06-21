@@ -9,11 +9,11 @@ import { AiFillEye } from "react-icons/ai";
 
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword]=useState("")
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,36 +31,27 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
     if (!validateForm()) return;
     console.log('✅ Form valid, sending to backend:', formData);
     try {
-      const request = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      const request = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
-
-
-      })
-      const response = await request.json()
-      console.log(response);
-
-      if (request.ok) {
-        dispatch(login({ user: response, token: "token" }))
-        navigate("/")
-        toast.success("Login success", { theme: "colored" })
-        
-      }
-      console.log(request);
+      });
+      const data = await request.json();
+      console.log("DATA: ", data);
+      if (!request.ok) {
+        throw new Error(data.error);
+      };
+      dispatch(login(data));
+      navigate("/")
+      toast.success("Logged successfully");
+    } catch (e) {
+      console.error("Server error: ", e.message);
+      toast.error(e.message);
     }
-    catch (e) {
-
-
-    }
-    // bu yerga API chaqiruv yozish mumkin
   };
 
   return (
