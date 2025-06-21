@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.0.9",
+    "emoji-picker-react": "^4.12.2",
     "localforage": "^1.10.0",
     "match-sorter": "^8.0.2",
     "react": "^19.0.0",
