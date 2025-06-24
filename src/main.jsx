@@ -55,7 +55,10 @@ const router = createBrowserRouter([
   {
     path: "/room/:roomId/playing",
     element:
+       <PrivateRouter>
         <Game />
+        </PrivateRouter>
+
   }
 
 ]);
