@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { io } from "socket.io-client";
 import EmojiPicker from 'emoji-picker-react';
 import { FaRegPaperPlane } from "react-icons/fa";
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 // Подключение к серверу
 const socket = io("http://localhost:5000");
@@ -9,18 +11,16 @@ const socket = io("http://localhost:5000");
 const GameChat = () => {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
+    const user = useSelector((state) => state?.auth?.user);
+    console.log(user)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
+    const params = useParams();
     // Когда компонент загрузится — присоединяемся к комнате
     useEffect(() => {
-        const roomId = "room_123"; // замени на динамический ID
+        const roomId = params.roomId;
 
-        socket.emit("join_room", { roomId, userId: "123", username: "User123" });
+        socket.emit("join_room", { roomId, userId: user?.user?._id, username: user?.user?.username });
         console.log("🟢 Присоединились к комнате:", roomId);
-
-        console.log(socket);
-        
-
         return () => {
             console.log("🔴 Покинули комнату");
         };
@@ -30,13 +30,11 @@ const GameChat = () => {
     useEffect(() => {
         socket.on("receive_message", (receivedMessage) => {
             console.log('habar keldi');
-            
+            console.log("xabar", receivedMessage)
+
             setMessages(prev => [...prev, receivedMessage]);
         });
 
-        return () => {
-            socket.off("receive_message");
-        };
     }, []);
 
     // Отправка сообщения
@@ -52,7 +50,7 @@ const GameChat = () => {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
-        const roomId = "room_123"; // замени на динамический ID
+        const roomId = params.roomId; 
         const resopnse = socket.emit("send_message", { roomId, message: chatMessage });
 
 
