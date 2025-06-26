@@ -11,7 +11,7 @@ const Room = () => {
 
   const user = auth; // { id, username }
   const [players, setPlayers] = useState([]);
-
+  console.log("YETIM")
   // ⬅️ Kirishda `join_room` jo'natish
   useEffect(() => {
     if (user && roomId) {
@@ -28,15 +28,20 @@ const Room = () => {
   // 🟢 Real-time playerlar holatini olish
   useEffect(() => {
     const handleUpdatePlayers = (playersFromServer) => {
+      console.log("Players: ", playersFromServer);
       setPlayers(playersFromServer);
     };
-
+    socket.emit('get_players', roomId);
     socket.on('update_players', handleUpdatePlayers);
 
     return () => {
       socket.off('update_players', handleUpdatePlayers);
     };
   }, []);
+
+  useEffect(() => {
+    console.log("DEBuG:", players);
+  },[players])
 
   const handleReady = () => {
     socket.emit("ready", { roomId, userId: user._id });
