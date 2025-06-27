@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import socket from '../socket';
+import { AiOutlineHtml5 } from 'react-icons/ai';
 
 const Room = () => {
   const navigate = useNavigate();
   const { roomId } = useParams();
-  const auth = useSelector(state => state.auth?.user?.user); // Reduxdan token, user olinadi
+  const auth = useSelector(state => state.auth?.user?.user); 
+  console.log("debug",  auth)
 
   const user = auth; // { id, username }
   const [players, setPlayers] = useState([]);

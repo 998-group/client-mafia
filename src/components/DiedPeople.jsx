@@ -4,11 +4,15 @@ import { useSelector } from 'react-redux';
 const DiedPeople = ({ players }) => {
 
   const [users, setUsers] = useState([]);
+  const [filteredPlayers, setFilteredPlayers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const user = useSelector((state => state?.auth?.user))
+
+  console.log("PLAYERS: ", users);
   console.log("User", user);
 
   useEffect(() => {
-    setUsers(players)
+    setUsers(players) 
     console.log("PLAYERS GAME: ", players)
   },[players])
 
@@ -16,17 +20,25 @@ const DiedPeople = ({ players }) => {
     socket.emit("get_game_players", user?._id)
   }, [])
 
+  const filteredUsers = users.filter((user) =>
+    user.username.toLowerCase().includes(searchQuery.toLowerCase(onkeydown="return false"))
+    
+  );
+  console.log("filter:", filteredUsers);
+  
+
 
   return (
     <div className='w-full flex-1 rounded-l-2xl drop-shadow-2xl h-full bg-base-300 p-2 border-2 border-primary border-r-0'>
       <div className=''>
         <ul className="list  rounded-box  shadow-xl hover:shadow-2xl transition-all overflow-y-auto flex-1 duration-300">
           <li className="p-2  text-xs opacity-60 w-full tracking-wide text-netural-content">Players List:</li>
+          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search" className='input input-bordered w-full' />
           {users.map(user => (
             <li key={user.id} className="list-row flex  items-center gap-2 p-2 hover:bg-accent/10 rounded-lg transition">
               <img className="size-10 rounded-box" src={user.img || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIlzxQ7OQIRWzgQRZv0-6Y6J7_ecKpPitmBA&s"} alt={user.name} />
               <div className="flex justify-between w-full">
-                <div className="font-medium">{user.username}</div>
+                <div className="font-medium">{user?.username}</div>
                 <span className={`${user.isAlive ? "text-success" : "text-error"}`}>{user.isAlive ? "Live" : "Dead"}</span>
               </div>
             </li>
