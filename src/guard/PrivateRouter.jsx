@@ -13,4 +13,4 @@ const PrivateRouter = ({ children }) => {
   return auth ? children : null
 }
 
-export default PrivateRouter
+export default PrivateRouter 

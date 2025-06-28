@@ -48,13 +48,16 @@ const Home = () => {
       const res = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/game/create-room", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hostId: user?.user?._id, roomName: name }),
+        body: JSON.stringify({
+          hostId: user?.user?._id,
+          roomName: name,
+        }),
       });
-
+  
       const data = await res.json();
       if (res.ok) {
-        toast.success("Room created successfully", { theme: "colored" });
-        joinRoom(data.newGame?.roomId);
+        toast.success("Room created successfully");
+        joinRoom(data.newGame.roomId);
       }
     } catch (e) {
       console.error("Server error:", e);

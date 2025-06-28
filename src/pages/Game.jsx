@@ -10,20 +10,22 @@ const Game = () => {
     const { roomId } = useParams();
     const [isLoading, setIsLoading] = useState(true);
     const [progress, setProgress] = useState(0);
-    const [players, setPlayers] = useState([])
-    const role = { role: "Mafia", title: "Sizning rolingiz mafiya endi siz xohlagan odamingizni o'ldira olasiz", img: "https://e1.pxfuel.com/desktop-wallpaper/834/909/desktop-wallpaper-3840x2160-mafia-3-logo-art-games-mafia-3.jpg" }
+    const [players, setPlayers] = useState([]);
+    const [timeLeft, setTimeLeft] = useState(0);  // ✅ Timer state
+
+    const role = { role: "Mafia", title: "Sizning rolingiz mafiya endi siz xohlagan odamingizni o'ldira olasiz", img: "https://e1.pxfuel.com/desktop-wallpaper/834/909/desktop-wallpaper-3840x2160-mafia-3-logo-art-games-mafia-3.jpg" };
+
     useEffect(() => {
         const interval = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 100) {
                     clearInterval(interval);
-                    setIsLoading(false); // 👈 Bu yerda loading tugaydi
+                    setIsLoading(false);
                     return 100;
                 }
                 return prev + 1;
             });
-        }, 1); // 30ms * 100 = 3000ms => 3s
-
+        }, 1);
         return () => clearInterval(interval);
     }, []);
 
@@ -41,8 +43,23 @@ const Game = () => {
     }, []);
 
     useEffect(() => {
-        console.log("DEBuG:", players);
-    }, [players])
+        const handleTimerUpdate = ({ timeLeft }) => {
+            setTimeLeft(timeLeft);
+        };
+
+        socket.on('timer_update', handleTimerUpdate);
+
+        return () => {
+            socket.off('timer_update', handleTimerUpdate);
+        };
+    }, []);
+
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-screen">
@@ -63,7 +80,8 @@ const Game = () => {
                 </div>
             </div>
             <div className='w-1/4 h-full flex flex-col'>
-                <Timer day={true} time={"05:00"} />
+            <Timer day={true} time={timeLeft} />
+
                 <GameCard card={role} />
             </div>
         </div>
