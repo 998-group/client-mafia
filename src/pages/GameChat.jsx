@@ -15,7 +15,6 @@ const GameChat = () => {
     console.log(user)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const params = useParams();
-    // Когда компонент загрузится — присоединяемся к комнате
     useEffect(() => {
         const roomId = params.roomId;
 
@@ -25,8 +24,6 @@ const GameChat = () => {
             console.log("🔴 Покинули комнату");
         };
     }, []);
-
-    // Слушаем входящие сообщения
     useEffect(() => {
         socket.on("receive_message", (receivedMessage) => {
             console.log('habar keldi');
@@ -36,8 +33,6 @@ const GameChat = () => {
         });
 
     }, []);
-
-    // Отправка сообщения
     const handleSendMessage = () => {
         if (!message.trim()) return;
 
@@ -67,15 +62,12 @@ const GameChat = () => {
 
     return (
         <div className='bg-base-100 h-[90vh] flex flex-col border-2 border-primary rounded-r-2xl'>
-            {/* Заголовок */}
             <div className='flex w-full bg-teal border-b-2 shadow-primary border-primary p-2 justify-between items-center'>
                 <div className='flex items-center gap-3'>
                     <img src="https://cdn-icons-png.flaticon.com/512/6858/6858504.png" alt="Avatar" className='w-10 h-10 rounded-full' />
                     <p className='font-bold text-2xl'>Мафия Чат</p>
                 </div>
             </div>
-
-            {/* Сообщения */}
             <div className='flex-1 overflow-y-auto p-4 space-y-2 items-center'>
                 {messages.map((msg, index) => (
                     <div key={index} className={`chat chat-${msg.alignment}`}>
@@ -87,8 +79,6 @@ const GameChat = () => {
                     </div>
                 ))}
             </div>
-
-            {/* Ввод текста */}
             <div className="p-4 border-t border-base-300 flex items-end gap-2">
                 <div className="relative flex-1">
                     <input
