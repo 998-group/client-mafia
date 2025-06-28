@@ -26,7 +26,7 @@ const DiedPeople = ({ players }) => {
             <li key={user.id} className="list-row flex  items-center gap-2 p-2 hover:bg-accent/10 rounded-lg transition">
               <img className="size-10 rounded-box" src={user.img || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIlzxQ7OQIRWzgQRZv0-6Y6J7_ecKpPitmBA&s"} alt={user.name} />
               <div className="flex justify-between w-full">
-                <div className="font-medium">{user.username}</div>
+                <div className="font-medium capitalize">{user.username}</div>
                 <span className={`${user.isAlive ? "text-success" : "text-error"}`}>{user.isAlive ? "Live" : "Dead"}</span>
               </div>
             </li>
