@@ -14,6 +14,8 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [phase, setPhase] = useState("started"); // 🆕 phase holati
 
+
+
   const role = {
     role: "Mafia",
     title: "Sizning rolingiz mafiya, endi siz xohlagan odamingizni o'ldira olasiz",
@@ -71,9 +73,21 @@ const Game = () => {
 
   // Phase updates
   useEffect(() => {
+    const handleTimerEnd = () => {
+      socket.emit("game_phase", { roomId });
+    };
+
+    socket.on("timer_end", handleTimerEnd);
+
+    return () => {
+      socket.off("timer_end", handleTimerEnd);
+    };
+  }, [roomId]);
+  useEffect(() => {
     const handleGamePhase = (gameRoomData) => {
-      console.log("🔄 Phase updated:", gameRoomData.phase);
+      console.log("🌀 Phase received:", gameRoomData.phase);
       setPhase(gameRoomData.phase);
+
     };
 
     socket.on("game_phase", handleGamePhase);
@@ -82,6 +96,16 @@ const Game = () => {
       socket.off("game_phase", handleGamePhase);
     };
   }, []);
+  useEffect(() => {
+    socket.on("game_players", (gameRoom) => {
+      console.log("🎭 Roles:", gameRoom.players);
+      const me = gameRoom.players.find(p => p.userId === myUserId);
+      if (me) {
+        setMyRole(me.gameRole);
+      }
+    });
+  }, []);
+
 
   if (isLoading) {
     return (

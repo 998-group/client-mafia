@@ -38,7 +38,7 @@ const Timer = ({ day, time }) => {
         )}
       </div>
 
-      <div className='absolute bottom-3 right-3 bg-accent/40 text-primary px-6 rounded-xl py-2'>
+      <div className='absolute bottom-3 right-3 bg-accent/40 text-error filter backdrop-blur-xs px-6 rounded-xl py-2'>
         <p className='mb-1 text-center font-bold'>
           {day === "day" ? "День" : day === "night" ? "Ночь" : day === "ended" ? "Конец игры" : "Старт"}
         </p>
