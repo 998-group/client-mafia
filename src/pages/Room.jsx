@@ -58,12 +58,14 @@ const Room = () => {
       socket.off("start_game");
     }
   }, [])
-  
+
 
   const handleLeave = () => {
     socket.emit("leave_room", { roomId, userId: user._id });
     navigate('/');
   };
+
+  
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
