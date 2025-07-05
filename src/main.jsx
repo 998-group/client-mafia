@@ -29,7 +29,21 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />
+        element: <Home />,
+        children: [
+          {
+            path: "/",
+            element: <div>CHAT</div>,
+          },
+          {
+            path: "/profile",
+            element: <div>profile</div>,
+          },
+          {
+            path: "/shop",
+            element: <div>shop</div>,
+          },
+        ]
       },
       {
         path: "/games",
@@ -55,9 +69,9 @@ const router = createBrowserRouter([
   {
     path: "/room/:roomId/playing",
     element:
-       <PrivateRouter>
+      <PrivateRouter>
         <Game />
-        </PrivateRouter>
+      </PrivateRouter>
 
   }
 

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
 import socket from "../socket";
+import { FiMessageCircle } from "react-icons/fi";
+import { MdOutlineLocalGroceryStore } from "react-icons/md";
+import { CgProfile } from "react-icons/cg";
 
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
@@ -53,7 +56,7 @@ const Home = () => {
           roomName: name,
         }),
       });
-  
+
       const data = await res.json();
       if (res.ok) {
         toast.success("Room created successfully");
@@ -89,14 +92,29 @@ const Home = () => {
     <div className="flex h-screen">
       {/* LEFT PANEL */}
       <div className="flex-1 bg-base-300 p-5 flex flex-col items-center">
-        <figure>
-          <img
-            src={user?.user?.image}
-            alt="User"
-            className="size-32 rounded-full bg-base-100 border border-primary"
-          />
-        </figure>
-        <p className="mt-5 font-semibold text-xl">{user?.user?.username}</p>
+        <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
+          <li className="bg-base-100 flex-1 flex items-center justify-center">
+            <Link to="/">
+              <FiMessageCircle className="text-2xl" />
+            </Link>
+          </li>
+
+          <li className="bg-base-100 flex-1 flex items-center justify-center">
+            <Link to="/profile">
+              <CgProfile className="text-2xl" />
+            </Link>
+          </li>
+
+          <li className="bg-base-100 flex-1 flex items-center justify-center">
+            <Link to="/shop">
+              <MdOutlineLocalGroceryStore className="text-2xl" />
+            </Link>
+          </li>
+
+        </ul>
+        <div>
+          <Outlet />
+        </div>
       </div>
 
       {/* CENTER PANEL */}
