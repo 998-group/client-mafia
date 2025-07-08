@@ -112,7 +112,7 @@ const Home = () => {
           </li>
 
         </ul>
-        <div>
+        <div className="flex-1 bg-base-100 rounded-xl overflow-y-auto w-full mt-2">
           <Outlet />
         </div>
       </div>
