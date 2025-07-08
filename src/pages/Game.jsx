@@ -98,7 +98,7 @@ const Game = () => {
   }, []);
   useEffect(() => {
     socket.on("game_players", (gameRoom) => {
-      console.log("🎭 Roles:", gameRoom.players);
+      console.log("🎭 Roles:", gameRoom?.players);
       const me = gameRoom.players.find(p => p.userId === myUserId);
       if (me) {
         setMyRole(me.gameRole);
