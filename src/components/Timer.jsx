@@ -38,13 +38,13 @@ const Timer = ({ day, time }) => {
         )}
       </div>
 
-      <div className='absolute bottom-3 right-3 bg-accent/40 text-error filter backdrop-blur-xs px-6 rounded-xl py-2'>
-        <p className='mb-1 text-center font-bold'>
+      <div className='absolute bottom-3 flex flex-col gap-1 right-3 bg-accent/40 text-error filter backdrop-blur-xs px-6 rounded-xl py-2'>
+        <p className='font-bold'>
           {day === "day" ? "День" : day === "night" ? "Ночь" : day === "ended" ? "Конец игры" : "Старт"}
         </p>
 
 
-        <span className="countdown font-mono text-2xl flex gap-1">
+        <span className="countdown font-mono text-2xl flex gap-0.5">
           <span style={{ "--value": hours }}>{hours.toString().padStart(2, '0')}</span>:
           <span style={{ "--value": minutes }}>{minutes.toString().padStart(2, '0')}</span>:
           <span style={{ "--value": seconds }}>{seconds.toString().padStart(2, '0')}</span>
