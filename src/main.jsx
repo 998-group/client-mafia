@@ -18,6 +18,7 @@ import Room from './pages/Room.jsx';
 import Games from './pages/Games.jsx';
 import Game from "./pages/Game.jsx"
 import ChatGlobal from './pages/ChatGlobal.jsx';
+import Profile from './pages/Profile.jsx';
 
 const router = createBrowserRouter([
   {
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/profile",
-            element: <div>profile</div>,
+            element: <Profile/>,
           },
           {
             path: "/shop",
