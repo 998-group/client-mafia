@@ -95,19 +95,19 @@ const Home = () => {
         <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
           <li className="bg-base-100 flex-1 flex items-center justify-center">
             <Link to="/">
-              <FiMessageCircle className="text-2xl" />
+              <FiMessageCircle className="text-2xl text-success" />
             </Link>
           </li>
 
           <li className="bg-base-100 flex-1 flex items-center justify-center">
             <Link to="/profile">
-              <CgProfile className="text-2xl" />
+              <CgProfile className="text-2xl  text-warning" />
             </Link>
           </li>
 
           <li className="bg-base-100 flex-1 flex items-center justify-center">
             <Link to="/shop">
-              <MdOutlineLocalGroceryStore className="text-2xl" />
+              <MdOutlineLocalGroceryStore className="text-2xl text-info" />
             </Link>
           </li>
 
