@@ -44,7 +44,7 @@ const GameChat = () => {
     const navigate = useNavigate();
 
     const handleBack = () => {
-        navigate('/home');
+        navigate('/');
     }
     
     const handleSendMessage = () => {
