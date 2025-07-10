@@ -11,6 +11,8 @@ const ChatGlobal = () => {
 
     const sendMessage = async () => {
         socket.emit('send_message', { message: input, user: user })
+    
+        setInput('');
     }
 
     useEffect(() => {
@@ -43,7 +45,7 @@ const ChatGlobal = () => {
                 }
             </div>
             <div className=' flex items-center'>
-                <input type="text" placeholder='Type your message' onChange={(e) => setInput(e.target.value)} className='input flex-1 w-full input-primary rounded-r-none' />
+                <input type="text" placeholder='Type your message' value={input} onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { sendMessage() } }} onChange={(e) => setInput(e.target.value)} className='input flex-1 w-full input-primary rounded-r-none' />
                 <button className='btn btn-primary rounded-l-none' onClick={() => sendMessage()}>
                     <IoIosSend className='text-2xl' />
                 </button>
