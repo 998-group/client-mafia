@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { IoIosSend } from 'react-icons/io'
 import socket from '../socket'
 import { useSelector } from 'react-redux'
+import { data } from 'react-router-dom'
 const ChatGlobal = () => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
@@ -22,6 +23,8 @@ const ChatGlobal = () => {
             socket.off('receive_message');
         }
     }, [])
+
+  
     return (
         <div className='h-full p-4 flex flex-col gap-2'>
             <div className='flex-1 flex flex-col'>
