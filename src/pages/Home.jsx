@@ -97,19 +97,19 @@ const Home = () => {
         <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
           <li className={`flex-1 flex items-center justify-center ${path === '/' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/">
-              <FiMessageCircle className="text-2xl" />
+              <FiMessageCircle className="text-2xl text-success" />
             </Link>
           </li>
 
           <li className={`flex-1 flex items-center justify-center ${path === '/profile' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/profile">
-              <CgProfile className="text-2xl" />
+              <CgProfile className="text-2xl  text-warning" />
             </Link>
           </li>
 
           <li className={`flex-1 flex items-center justify-center ${path === '/shop' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/shop">
-              <MdOutlineLocalGroceryStore className="text-2xl" />
+              <MdOutlineLocalGroceryStore className="text-2xl text-info" />
             </Link>
           </li>
 

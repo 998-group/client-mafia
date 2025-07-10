@@ -1,33 +1,34 @@
-import React from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../redux/slices/authSlice';
+import { useSelector } from 'react-redux';
 
 const Profile = () => {
-    const user = useSelector(state => state?.auth?.user?.user);
-    const dispatch = useDispatch();
 
-    const handleLogout = () => {
-        dispatch(logout())
-    }
+    const user = useSelector((state) => state);
+    console.log("users profile: ", user);
+
     return (
-        <div className='h-full p-4 flex flex-col justify-between'>
-            <div className="flex-1 flex flex-col items-center gap-5">
-                <div className='size-40'>
-                    <img src={user?.image} alt="" />
-                </div>
-                <div className='flex flex-col w-full gap-4'>
-                    <p className='flex items-center justify-between w-full'>
-                        <span className='font-bold text-xl'>Username:</span>
-                        <span className='font-semibold text-xl'>{user?.username}</span>
-                    </p>
-                    <p className='flex items-center justify-between w-full'>
-                        <span className='font-bold text-xl'>Role:</span>
-                        <span className='font-semibold text-xl'>{user?.role}</span>
-                    </p>
+        <div className='flex flex-col gap-2 m-4'>
+            <div className='bg-base-300 w-full rounded-2xl p-3 '>
+                <div className='flex flex-col items-center justify-center gap-4'>
+                    <div>
+                        <img src={user?.auth?.user?.user?.image} alt="profile" className='w-20 h-20 border-3 border-warning rounded-full' />
+                    </div>
+                    <div>
+                        <p className='text-2xl font-bold'>{user?.auth?.user?.user?.username}</p>
+                    </div>
                 </div>
             </div>
-            <div className='w-full'>
-                <button className='btn btn-error btn-soft w-full' onClick={() => handleLogout()}>Logout</button>
+            <div className='bg-base-300 w-full rounded-2xl p-3 '>
+
+                <div className='bg-base-200 border-success w-full rounded-2xl p-1'>
+                    <p className='text-center text-xl font-extrabold text-warning'>Main information</p>
+                </div>
+
+                <div className='bg-base-200 mt-4 rounded-2xl p-3 flex flex-col gap-2 '>
+                    <p className='text-xl font-bold gap-3 text-warning'>User id: <span className='text-xs relative left-2 text-base-content font-medium'>{user?.auth?.user?.user?._id}</span></p>
+                    <p className='text-xl font-bold gap-3 text-warning'>Role: <span className='text-xl relative left-2 text-base-content'>{user?.auth?.user?.user?.role}</span></p>
+                    <p className='text-xl font-bold gap-3 text-warning'>Gender: <span className='text-xl relative left-2 text-base-content'>{user?.auth?.user?.user?.gender || "Male"}</span></p>
+                    <p className='text-xl font-bold gap-3 text-warning' >Status: <span className='text-xs p-2 bg-success  relative left-2 text-base-content  rounded-2xl'>{user?.auth?.user?.user?.satus || "Online"}</span></p>
+                </div>
             </div>
         </div>
     )
