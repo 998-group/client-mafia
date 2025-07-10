@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
 import socket from "../socket";
@@ -16,6 +16,8 @@ const Home = () => {
   const [roomInfo, setRoomInfo] = useState([]);
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  const path = location.pathname;
 
   // 👥 Fetch leaderboard users
   useEffect(() => {
@@ -99,18 +101,28 @@ const Home = () => {
     <div className="flex h-screen">
       {/* LEFT PANEL */}
       <div className="flex-1 bg-base-300 p-5 flex flex-col items-center">
-        <ul className="menu menu-horizontal w-full gap-5 bg-base-200 rounded-box mt-6">
-          <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/"><FiMessageCircle className="text-2xl" /></Link>
+        <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
+          <li className={`flex-1 flex items-center justify-center ${path === '/' ? "bg-primary" : "bg-base-100"}`}>
+            <Link to="/">
+              <FiMessageCircle className="text-2xl text-success" />
+            </Link>
           </li>
-          <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/profile"><CgProfile className="text-2xl" /></Link>
+
+          <li className={`flex-1 flex items-center justify-center ${path === '/profile' ? "bg-primary" : "bg-base-100"}`}>
+            <Link to="/profile">
+              <CgProfile className="text-2xl  text-warning" />
+            </Link>
           </li>
-          <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/shop"><MdOutlineLocalGroceryStore className="text-2xl" /></Link>
+
+          <li className={`flex-1 flex items-center justify-center ${path === '/shop' ? "bg-primary" : "bg-base-100"}`}>
+            <Link to="/shop">
+              <MdOutlineLocalGroceryStore className="text-2xl text-info" />
+            </Link>
           </li>
         </ul>
-        <div><Outlet /></div>
+        <div className="flex-1 bg-base-100 rounded-xl overflow-y-auto w-full mt-2">
+          <Outlet />
+        </div>
       </div>
 
       {/* CENTER PANEL - Leaderboard */}
