@@ -149,9 +149,9 @@ const Home = () => {
                   }`}
               >
                 <div className="w-10">{idx + 1}</div>
-                <div className="w-1/3">{item.username}</div>
-                <div className="w-1/3 text-center">{item.role}</div>
-                <div className="w-1/3 text-end">{item.score}</div>
+                <div className="w-1/3">{item?.username}</div>
+                <div className="w-1/3 text-center">{item?.role}</div>
+                <div className="w-1/3 text-end">{item?.score}</div>
               </div>
             ))}
           </div>
