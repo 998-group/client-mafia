@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { CgProfile } from "react-icons/cg";
 
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
+  console.log("USER: ", user);
   const [name, setName] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomInfo, setRoomInfo] = useState([]);
@@ -18,15 +19,29 @@ const Home = () => {
   const location = useLocation();
   const path = location.pathname;
 
-  const leaderBoard = [
-    { username: "Bekzod", role: "admin", score: 1200 },
-    { username: "Aziz", role: "user", score: 950 },
-    { username: "Shahzod", role: "user", score: 870 },
-    { username: "Dilshod", role: "moderator", score: 1020 },
-    { username: "Lola", role: "user", score: 1100 },
-    { username: "Sardor", role: "user", score: 980 },
-  ].sort((a, b) => b.score - a.score);
+  const [leaderBoard, setLeaderBoard] = useState([]).sort((a, b) => b.score - a.score)
+  const getAllUsers = async () => {
+  try {
 
+    const request = await fetch("http://localhost:5000/api/auth/users/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+
+    const response = await request.json();
+    console.log("USERS", response);
+    setLeaderBoard(response);
+  } catch (err) {
+    console.log("❌ Error fetching users:", err);
+  }
+};
+
+  useEffect(() => {
+    getAllUsers() 
+  }, [])
   // 🔁 Real-time rooms listener
   useEffect(() => {
     socket.on("update_rooms", (rooms) => {
