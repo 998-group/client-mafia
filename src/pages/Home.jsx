@@ -14,16 +14,23 @@ const Home = () => {
   const [name, setName] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomInfo, setRoomInfo] = useState([]);
+  const [users, setUsers] = useState([]);
   const navigate = useNavigate();
 
-  const leaderBoard = [
-    { username: "Bekzod", role: "admin", score: 1200 },
-    { username: "Aziz", role: "user", score: 950 },
-    { username: "Shahzod", role: "user", score: 870 },
-    { username: "Dilshod", role: "moderator", score: 1020 },
-    { username: "Lola", role: "user", score: 1100 },
-    { username: "Sardor", role: "user", score: 980 },
-  ].sort((a, b) => b.score - a.score);
+  // 👥 Fetch leaderboard users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/users/leaderboard");
+        const data = await res.json();
+        const sorted = data.sort((a, b) => b.score - a.score);
+        setUsers(sorted);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // 🔁 Real-time rooms listener
   useEffect(() => {
@@ -67,7 +74,7 @@ const Home = () => {
     }
   };
 
-  // 🔗 Join to room via socket
+  // 🔗 Join room
   const joinRoom = (roomId) => {
     socket.emit("join_room", {
       roomId,
@@ -92,32 +99,21 @@ const Home = () => {
     <div className="flex h-screen">
       {/* LEFT PANEL */}
       <div className="flex-1 bg-base-300 p-5 flex flex-col items-center">
-        <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
+        <ul className="menu menu-horizontal w-full gap-5 bg-base-200 rounded-box mt-6">
           <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/">
-              <FiMessageCircle className="text-2xl" />
-            </Link>
+            <Link to="/"><FiMessageCircle className="text-2xl" /></Link>
           </li>
-
           <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/profile">
-              <CgProfile className="text-2xl" />
-            </Link>
+            <Link to="/profile"><CgProfile className="text-2xl" /></Link>
           </li>
-
           <li className="bg-base-100 flex-1 flex items-center justify-center">
-            <Link to="/shop">
-              <MdOutlineLocalGroceryStore className="text-2xl" />
-            </Link>
+            <Link to="/shop"><MdOutlineLocalGroceryStore className="text-2xl" /></Link>
           </li>
-
         </ul>
-        <div>
-          <Outlet />
-        </div>
+        <div><Outlet /></div>
       </div>
 
-      {/* CENTER PANEL */}
+      {/* CENTER PANEL - Leaderboard */}
       <div className="flex-1 h-full min-w-6/12 p-5">
         <div className="h-full w-full bg-base-300 rounded-xl drop-shadow-xl overflow-y-auto flex flex-col">
           <div className="flex items-center justify-center gap-5 h-24 bg-error">
@@ -125,11 +121,12 @@ const Home = () => {
             <p className="font-bold text-3xl">Leaderboard</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {leaderBoard.map((item, idx) => (
+            {users.map((item, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
-                  }`}
+                className={`flex items-center justify-between p-2 ${
+                  idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
+                }`}
               >
                 <div className="w-10">{idx + 1}</div>
                 <div className="w-1/3">{item.username}</div>
@@ -141,7 +138,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* RIGHT PANEL (ROOMS) */}
+      {/* RIGHT PANEL - Rooms */}
       <div className="flex-1 bg-base-300 flex flex-col">
         <div className="flex items-center justify-between p-2 bg-error">
           <p className="font-bold text-xl">Rooms:</p>
@@ -153,7 +150,6 @@ const Home = () => {
           </button>
         </div>
 
-        {/* Room list */}
         <div className="flex-1 flex flex-col gap-1 overflow-y-auto">
           {rooms.length > 0 ? (
             <>
@@ -199,9 +195,7 @@ const Home = () => {
             <div className="modal-action">
               <form method="dialog">
                 <button className="btn btn-soft btn-error mr-3">Close</button>
-                <button className="btn btn-soft btn-success" onClick={createRoom}>
-                  Create
-                </button>
+                <button className="btn btn-soft btn-success" onClick={createRoom}>Create</button>
               </form>
             </div>
           </div>
@@ -232,9 +226,7 @@ const Home = () => {
             </div>
             <div className="modal-action mt-5">
               <form method="dialog">
-                <button className="btn" onClick={() => document.getElementById("my_modal_2").close()}>
-                  Close
-                </button>
+                <button className="btn" onClick={() => document.getElementById("my_modal_2").close()}>Close</button>
               </form>
             </div>
           </div>
