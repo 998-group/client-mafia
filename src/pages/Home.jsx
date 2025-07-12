@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { CgProfile } from "react-icons/cg";
 
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
+  console.log("USER: ", user);
   const [name, setName] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomInfo, setRoomInfo] = useState([]);
@@ -19,21 +20,29 @@ const Home = () => {
   const location = useLocation();
   const path = location.pathname;
 
-  // 👥 Fetch leaderboard users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch(import.meta.env.VITE_BACKEND_URL + "/api/users/leaderboard");
-        const data = await res.json();
-        const sorted = data.sort((a, b) => b.score - a.score);
-        setUsers(sorted);
-      } catch (err) {
-        console.error("Failed to fetch users:", err);
-      }
-    };
-    fetchUsers();
-  }, []);
+  const [leaderBoard, setLeaderBoard] = useState([]).sort((a, b) => b.score - a.score)
+  const getAllUsers = async () => {
+  try {
 
+    const request = await fetch("http://localhost:5000/api/auth/users/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+
+    const response = await request.json();
+    console.log("USERS", response);
+    setLeaderBoard(response);
+  } catch (err) {
+    console.log("❌ Error fetching users:", err);
+  }
+};
+
+  useEffect(() => {
+    getAllUsers() 
+  }, [])
   // 🔁 Real-time rooms listener
   useEffect(() => {
     socket.on("update_rooms", (rooms) => {
@@ -133,7 +142,7 @@ const Home = () => {
             <p className="font-bold text-3xl">Leaderboard</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {users.map((item, idx) => (
+            {leaderBoard.map((item, idx) => (
               <div
                 key={idx}
                 className={`flex items-center justify-between p-2 ${
