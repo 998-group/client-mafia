@@ -62,7 +62,6 @@ const GameChat = () => {
         const roomId = params.roomId; 
         const resopnse = socket.emit("send_message", { roomId, message: chatMessage });
 
-
         console.log(resopnse);
 
 

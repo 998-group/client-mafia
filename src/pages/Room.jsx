@@ -65,15 +65,14 @@ const Room = () => {
     navigate('/');
   };
 
-  
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl bg-base-100 shadow-xl rounded-2xl p-6 space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-primary">
+          <p className="text-3xl font-bold text-primary">
             🏠 Room: <span className="text-secondary">{roomId}</span>
-          </h2>
+          </p>
           <p className="text-sm text-base-content/70">Waiting for players to join...</p>
         </div>
 

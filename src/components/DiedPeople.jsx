@@ -17,7 +17,7 @@ const DiedPeople = ({ players }) => {
   }, []);
 
   const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    user?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
