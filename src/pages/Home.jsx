@@ -1,6 +1,5 @@
 import React, { use, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { ImEnter } from "react-icons/im";
@@ -46,6 +45,7 @@ const Home = () => {
   useEffect(() => {
     socket.on("update_rooms", (rooms) => {
       setRooms(rooms);
+      console.log("Rooms: ", rooms);
     });
     return () => socket.off("update_rooms");
   }, []);
@@ -72,7 +72,11 @@ const Home = () => {
       await socket.emit("create_room", {
         hostId: user?.user?._id,
         roomName: name,
-      })   
+      })  
+      
+      socket.once("joined_room", (room) => {
+        navigate(`/room/${room.roomId}/waiting`)
+      })
     } catch (e) {
       console.error("Server error:", e);
     }
