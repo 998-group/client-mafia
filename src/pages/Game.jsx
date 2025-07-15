@@ -1,159 +1,141 @@
-// ✅ Full fixed Game.jsx (with always-emitted timer and roles)
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import GameChat from '../components/GameChat';
-import GameCard from '../components/GameCard';
-import DiedPeople from '../components/DiedPeople';
-import Timer from '../components/Timer';
-import socket from '../socket';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import socket from "../socket";
+import GameChat from "../components/GameChat";
+import GameCard from "../components/GameCard";
+import DiedPeople from "../components/DiedPeople";
+import Timer from "../components/Timer";
 
 const Game = () => {
   const { roomId } = useParams();
-  const myUserId = useSelector((state) => state.auth?.user?.user?._id);
+  const navigate = useNavigate();
+  const myUserId = useSelector(s => s.auth?.user?.user?._id);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
+  const [rooms, setRooms] = useState([]);
   const [players, setPlayers] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [phase, setPhase] = useState("started");
+  const [phase, setPhase] = useState("waiting");
   const [myRole, setMyRole] = useState(null);
 
-  // ⏳ Loading splash (progress bar)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsLoading(false);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 1);
-    return () => clearInterval(interval);
+    const intv = setInterval(() => {
+      setIsLoading(false);
+      clearInterval(intv);
+    }, 100);
+    return () => clearInterval(intv);
   }, []);
 
-  // 📥 Timer update listener
   useEffect(() => {
-    const handleTimerUpdate = ({ timeLeft }) => {
-      console.log("⏰ Timer received:", timeLeft);
-      setTimeLeft(timeLeft);
-    };
-    socket.on("timer_update", handleTimerUpdate);
-    return () => socket.off("timer_update", handleTimerUpdate);
+    socket.emit("request_rooms");
+    socket.on("update_rooms", setRooms);
+    return () => socket.off("update_rooms", setRooms);
   }, []);
 
-  // 📥 Game phase listener
   useEffect(() => {
-    const handleGamePhase = (gameRoomData) => {
-      console.log("🎯 Phase:", gameRoomData.phase);
-      setPhase(gameRoomData.phase);
-    };
-    socket.on("game_phase", handleGamePhase);
-    return () => socket.off("game_phase", handleGamePhase);
+    if (!roomId) return;
+    socket.emit("get_room_phase", roomId);
+    socket.once("room_phase", ({ phase }) => {
+      if (phase !== "waiting") {
+        alert("Игра уже идёт");
+        navigate("/");
+      }
+    });
+  }, [roomId, navigate]);
+
+  useEffect(() => {
+    socket.on("timer_update", data => setTimeLeft(data.timeLeft));
+    return () => socket.off("timer_update");
   }, []);
 
-  // 📥 update_players listener
   useEffect(() => {
-    const handleUpdatePlayers = (playersFromServer) => {
-      setPlayers(playersFromServer);
-    };
-    socket.on("update_players", handleUpdatePlayers);
-    return () => socket.off("update_players", handleUpdatePlayers);
+    socket.on("game_phase", data => setPhase(data.phase));
+    return () => socket.off("game_phase");
   }, []);
 
-  // 📥 game_players listener (used to extract my role)
+  useEffect(() => {
+    socket.on("update_players", setPlayers);
+    return () => socket.off("update_players");
+  }, []);
+
   useEffect(() => {
     if (!myUserId) return;
-    const handleGamePlayers = (gameRoom) => {
-      const me = gameRoom.players.find(
-        (p) => p.userId?.toString() === myUserId?.toString()
-      );
-      if (!me || !me.gameRole) return;
-
-      const roleData = {
-        role: me.gameRole,
-        img: getRoleImage(me.gameRole),
-        title: getRoleTitle(me.gameRole),
-      };
-      setMyRole(roleData);
-    };
-    socket.on("game_players", handleGamePlayers);
-    return () => socket.off("game_players", handleGamePlayers);
+    socket.on("game_players", game => {
+      const me = game.players.find(p => p.userId.toString() === myUserId);
+      if(me?.gameRole) {
+        setMyRole({
+          role: me.gameRole,
+          img: getRoleImage(me.gameRole),
+          title: getRoleTitle(me.gameRole),
+        });
+      }
+    });
+    return () => socket.off("game_players");
   }, [myUserId]);
 
-  // 📤 get_players emit (fetch current state)
   useEffect(() => {
-    if (roomId) {
-      socket.emit("get_players", roomId);
-    }
+    if (roomId) socket.emit("get_players", roomId);
   }, [roomId]);
 
-  // 🎭 Role images
-  const getRoleImage = (role) => {
-    switch (role) {
-      case "mafia":
-        return "https://e1.pxfuel.com/desktop-wallpaper/834/909/desktop-wallpaper-3840x2160-mafia-3-logo-art-games-mafia-3.jpg";
-      case "doctor":
-        return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
-      case "detective":
-        return "https://cdn-icons-png.flaticon.com/512/3480/3480795.png";
-      case "peaceful":
-        return "https://cdn-icons-png.flaticon.com/512/1053/1053244.png";
-      default:
-        return "https://cdn-icons-png.flaticon.com/512/565/565547.png";
-    }
-  };
+  const getRoleImage = role => ({
+    mafia: "https://...",
+    detective: "https://...",
+    doctor: "https://...",
+    peaceful: "https://..."
+  }[role] || "https://...");
 
-  // 🎭 Role descriptions
-  const getRoleTitle = (role) => {
-    switch (role) {
-      case "mafia":
-        return "Siz mafiya roligidasiz. Tunda biror odamni o‘ldira olasiz.";
-      case "doctor":
-        return "Siz doctor roligidasiz. Har tunda bir odamni davolay olasiz.";
-      case "detective":
-        return "Siz detective roligidasiz. Kim mafiya ekanini aniqlay olasiz.";
-      case "peaceful":
-        return "Siz oddiy fuqaro. Faqat ovoz berishda qatnashasiz.";
-      default:
-        return "Rol aniqlanmadi.";
-    }
-  };
+  const getRoleTitle = role => ({
+    mafia: "Вы — мафия",
+    detective: "Вы — детектив",
+    doctor: "Вы — доктор",
+    peaceful: "Вы — мирный"
+  }[role] || "Неизвестная роль");
 
-  // 💡 Splash screen loader
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <progress className="progress progress-accent w-96" value={progress} max="100" />
-        <p className="mt-2 text-lg font-bold">{progress}%</p>
-      </div>
-    );
-  }
-
-  // 👇 return() qismi keyin yoziladi...
-
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen">
+      <p>Loading...</p>
+    </div>
+  );
 
   return (
-    <div className="flex h-screen p-3">
-      <div className="w-1/4 h-full flex-1 flex flex-col">
-        <DiedPeople players={players} />
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Страница игры</h1>
+
+      <div className="mb-6">
+        <h2 className="text-xl">Комнаты:</h2>
+        <ul>
+          {rooms.map(r => (
+            <li key={r.roomId} className="mb-2">
+              {r.roomName} [{r.players.length}] — {r.phase} {" "}
+              {r.phase === "waiting" && (
+                <button
+                  className="ml-2 text-blue-600"
+                  onClick={() => {
+                    socket.emit("join_room", {
+                      roomId: r.roomId,
+                      userId: myUserId,
+                      username: "Me",
+                    });
+                    navigate(`/game/${r.roomId}`);
+                  }}
+                >
+                  Войти
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <div className="w-2/4 h-full flex flex-col">
-        <div className="h-full w-full justify-center flex-1">
-          <GameChat />
+      <div className="flex space-x-4">
+        <div className="w-1/4"><DiedPeople players={players}/></div>
+        <div className="w-1/2"><GameChat/></div>
+        <div className="w-1/4 space-y-4">
+          <Timer day={phase} time={timeLeft}/>
+          {myRole ? <GameCard card={myRole}/> :
+            <p>Роль загружается...</p>}
         </div>
-      </div>
-
-      <div className="w-1/4 h-full flex flex-col">
-        <Timer day={phase} time={timeLeft} />
-        {myRole ? (
-          <GameCard card={myRole} />
-        ) : (
-          <div className="text-center text-warning mt-5">⏳ Rolingiz yuklanmoqda...</div>
-        )}
       </div>
     </div>
   );
