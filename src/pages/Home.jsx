@@ -136,7 +136,7 @@ const Home = () => {
             <p className="font-bold text-3xl">Leaderboard</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {leaderBoard.map((item, idx) => (
+            {leaderBoard?.map((item, idx) => (
               <div
                 key={idx}
                 className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
