@@ -55,7 +55,7 @@ const GameChat = () => {
             name: "Вы",
             avatar: "https://cdn-icons-png.flaticon.com/512/6858/6858504.png",
             alignment: "end",
-            bubbleStyle: "chat-bubble-warning",
+            bubbleStyle: "chat-bubble-primary ",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
@@ -79,7 +79,7 @@ const GameChat = () => {
                 <div className='flex items-center gap-3'>
                     <IoArrowBackOutline className='text-3xl border-2 border-primary cursor-pointer rounded-full h-8 w-8' onClick={handleBack} />
                     <img src="https://cdn-icons-png.flaticon.com/512/6858/6858504.png" alt="Avatar" className='w-10 h-10 rounded-full' />
-                    <p className='font-bold text-2xl'>Мафия Чат</p>
+                    <p className='font-bold text-2xl'>Mafia chat</p>
                 </div>
             </div>
             <div className='flex-1 overflow-y-auto p-4 space-y-2 items-center'>
@@ -87,7 +87,6 @@ const GameChat = () => {
                     <div key={index} className={` flex gap-2 items-center chat chat-${msg?.alignment}`} >
                         <img src={msg?.avatar} alt="Avatar" className="size-14 relative " />
                         <div className={`${msg?.bubbleStyle} chat-bubble flex flex-col`}>
-                            <span>{msg?.name}</span>
                             <span>{msg?.text}</span>
                             <span className='text-end text-xs'>{msg?.timestamp}</span>
                         </div>
