@@ -26,7 +26,6 @@ const Profile = () => {
                 <div className='bg-base-200 mt-4 rounded-2xl p-3 flex flex-col gap-2 '>
                     <p className='text-xl font-bold gap-3 text-warning'>User id: <span className='text-xs relative left-2 text-base-content font-medium'>{user?.auth?.user?.user?._id}</span></p>
                     <p className='text-xl font-bold gap-3 text-warning'>Role: <span className='text-xl relative left-2 text-base-content'>{user?.auth?.user?.user?.role}</span></p>
-                    <p className='text-xl font-bold gap-3 text-warning'>Gender: <span className='text-xl relative left-2 text-base-content'>{user?.auth?.user?.user?.gender || "Male"}</span></p>
                     <p className='text-xl font-bold gap-3 text-warning' >Status: <span className='text-xs p-2 bg-success  relative left-2 text-base-content  rounded-2xl'>{user?.auth?.user?.user?.satus || "Online"}</span></p>
                 </div>
             </div>
