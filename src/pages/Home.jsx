@@ -7,7 +7,7 @@ import socket from "../socket";
 import { FiMessageCircle } from "react-icons/fi";
 import { MdOutlineLocalGroceryStore } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
-
+import { toast } from "react-toastify";
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
   console.log("USER: ", user);
@@ -20,26 +20,26 @@ const Home = () => {
 
   const [leaderBoard, setLeaderBoard] = useState([]).sort((a, b) => b.score - a.score)
   const getAllUsers = async () => {
-  try {
+    try {
 
-    const request = await fetch("http://localhost:5000/api/auth/users/all", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user?.token}`,
-      },
-    });
+      const request = await fetch("http://localhost:5000/api/auth/users/all", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
 
-    const response = await request.json();
-    console.log("USERS", response);
-    setLeaderBoard(response);
-  } catch (err) {
-    console.log("❌ Error fetching users:", err);
-  }
-};
+      const response = await request.json();
+      console.log("USERS", response);
+      setLeaderBoard(response);
+    } catch (err) {
+      console.log("❌ Error fetching users:", err);
+    }
+  };
 
   useEffect(() => {
-    getAllUsers() 
+    getAllUsers()
   }, [])
   // 🔁 Real-time rooms listener
   useEffect(() => {
@@ -72,8 +72,8 @@ const Home = () => {
       await socket.emit("create_room", {
         hostId: user?.user?._id,
         roomName: name,
-      })  
-      
+      })
+
       socket.once("joined_room", (room) => {
         navigate(`/room/${room.roomId}/waiting`)
       })
@@ -102,6 +102,20 @@ const Home = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    const handleNotification = (data) => {
+      if (data?.type === "error") {
+        toast.error(data.message); // yoki toast / modal
+      }
+    };
+
+    socket.on("notification", handleNotification);
+
+    return () => {
+      socket.off("notification", handleNotification);
+    };
+  }, []);
 
   return (
     <div className="flex h-screen">
