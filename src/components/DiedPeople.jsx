@@ -2,6 +2,16 @@
 import React, { useEffect, useState } from 'react'
 import socket from '../socket'
 import { useSelector } from 'react-redux';
+import { TbSpeakerphone } from "react-icons/tb";
+import { GiPistolGun } from "react-icons/gi";
+import { LiaBriefcaseMedicalSolid } from "react-icons/lia";
+import { FaHeartPulse } from "react-icons/fa6";
+import { IoMdHeartDislike } from "react-icons/io";
+
+import { LuUserRoundSearch } from "react-icons/lu";
+
+
+
 
 const DiedPeople = ({ players }) => {
   const [users, setUsers] = useState([]);
@@ -41,10 +51,24 @@ const DiedPeople = ({ players }) => {
               <li key={user.id} className="list-row flex items-center gap-2 p-2 hover:bg-accent/10 rounded-lg transition">
                 <img className="size-10 rounded-box" src={user.img || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIlzxQ7OQIRWzgQRZv0-6Y6J7_ecKpPitmBA&s"} alt={user.username} />
                 <div className="flex justify-between w-full">
-                  <div className="font-medium">{user?.username}</div>
-                  <span className={`${user.isAlive ? "text-success" : "text-error"}`}>
-                    {user.isAlive ? "Live" : "Dead"}
-                  </span>
+                  <div className="font-medium min-w-28">{user?.username}</div>
+                  <div className='flex items-center gap-1 flex-1 justify-between'>
+
+                    <div className='mr-4 flex items-center gap-2'>
+                      <button disabled={false} className='cursor-pointer text-base text-warning '><LuUserRoundSearch /></button>
+
+                      <button disabled={false} className='cursor-pointer text-lg text-success'><LiaBriefcaseMedicalSolid /></button>
+
+                      <button disabled={false} className='cursor-pointer text-lg text-error'><GiPistolGun /></button>
+
+                      <button disabled={false} className='cursor-pointer text-lg text-info'> <TbSpeakerphone /></button>
+                    </div>
+
+                    <span className={`font-bold ${user.isAlive ? "text-success" : "text-error"} flex items-center gap-1`}>
+                      <span className={`${user.isAlive ? "animate-pulse" : ""}`}>{user.isAlive ? <FaHeartPulse /> : <IoMdHeartDislike />}</span> <span className='text-xs'>{user.isAlive ? "Alive" : "Dead"}</span>
+                    </span>
+                  </div>
+
                 </div>
               </li>
             ))

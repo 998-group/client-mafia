@@ -62,7 +62,6 @@ const Home = () => {
     return () => socket.off("joined_room");
   }, []);
 
-  // ➕ Create new room
   const createRoom = async () => {
     console.log({
       hostId: user?.user?._id,
@@ -82,7 +81,6 @@ const Home = () => {
     }
   };
 
-  // 🔗 Join to room via socket
   const joinRoom = (roomId) => {
     socket.emit("join_room", {
       roomId,

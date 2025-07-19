@@ -29,7 +29,7 @@ const ChatGlobal = () => {
   
     return (
         <div className='h-full p-4 flex flex-col gap-2'>
-            <div className='flex-1 flex flex-col'>
+            <div className='flex-1 flex flex-col overflow-y-auto'>
                 {
                     messages.map((text, index) => {
                         return (

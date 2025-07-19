@@ -13,6 +13,8 @@ const Room = () => {
 
   const user = auth; // { id, username }
   const [players, setPlayers] = useState([]);
+
+  console.log("playerss:", players)
   console.log("YETIM")
   // ⬅️ Kirishda `join_room` jo'natish
   useEffect(() => {
@@ -84,7 +86,7 @@ const Room = () => {
             >
               <FaUser className="text-primary text-xl" />
               <div className="flex flex-col">
-                <span className="text-base font-medium">{player.username}</span>
+                <span className="text-base font-medium">{player?.username}</span>
                 <span className={`text-xs ${player.isReady ? 'text-success' : 'text-warning'}`}>
                   {player.isReady ? 'Ready' : 'Not ready'}
                 </span>

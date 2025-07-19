@@ -57,6 +57,7 @@ const Game = () => {
   // 📥 update_players listener
   useEffect(() => {
     const handleUpdatePlayers = (playersFromServer) => {
+      console.log("Players from server:", playersFromServer);
       setPlayers(playersFromServer);
     };
     socket.on("update_players", handleUpdatePlayers);
@@ -66,10 +67,14 @@ const Game = () => {
   // 📥 game_players listener (used to extract my role)
   useEffect(() => {
     if (!myUserId) return;
+    
     const handleGamePlayers = (gameRoom) => {
       const me = gameRoom.players.find(
         (p) => p.userId?.toString() === myUserId?.toString()
       );
+
+      console.log("GAME ROOOOOOOOOOOOOOOOM : ", gameRoom);
+
       if (!me || !me.gameRole) return;
 
       const roleData = {
