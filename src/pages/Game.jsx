@@ -44,6 +44,10 @@ const Game = () => {
     return () => socket.off("timer_update", handleTimerUpdate);
   }, []);
 
+  useEffect(() => {
+    console.log("My role updated:", myRole);
+  }, [myRole])
+
   // 📥 Game phase listener
   useEffect(() => {
     const handleGamePhase = (gameRoomData) => {
@@ -82,6 +86,7 @@ const Game = () => {
         img: getRoleImage(me.gameRole),
         title: getRoleTitle(me.gameRole),
       };
+
       setMyRole(roleData);
     };
     socket.on("game_players", handleGamePlayers);
@@ -143,7 +148,7 @@ const Game = () => {
   return (
     <div className="flex h-screen p-3">
       <div className="w-1/4 h-full flex-1 flex flex-col">
-        <DiedPeople players={players} />
+        <DiedPeople players={players} myRole={myRole} />
       </div>
 
       <div className="w-2/4 h-full flex flex-col">

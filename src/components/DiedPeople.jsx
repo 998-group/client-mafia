@@ -13,7 +13,7 @@ import { LuUserRoundSearch } from "react-icons/lu";
 
 
 
-const DiedPeople = ({ players }) => {
+const DiedPeople = ({ players, myRole }) => {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const user = useSelector((state) => state?.auth?.user);
@@ -25,6 +25,7 @@ const DiedPeople = ({ players }) => {
   useEffect(() => {
     socket.emit("get_game_players", user?._id);
   }, []);
+
 
   const filteredUsers = users.filter((user) =>
     user?.username?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -55,17 +56,14 @@ const DiedPeople = ({ players }) => {
                   <div className='flex items-center gap-1 flex-1 justify-between'>
 
                     <div className='mr-4 flex items-center gap-2'>
-                      <button disabled={false} className='cursor-pointer text-base text-warning '><LuUserRoundSearch /></button>
-
-                      <button disabled={false} className='cursor-pointer text-lg text-success'><LiaBriefcaseMedicalSolid /></button>
-
-                      <button disabled={false} className='cursor-pointer text-lg text-error'><GiPistolGun /></button>
-
+                      <button disabled={myRole?.role === "detective"} className={`${myRole?.role === "detective" ? " text-warning cursor-pointer" : "cursor-not-allowed text-white/50"} text-base `}><LuUserRoundSearch /></button>
+                      <button disabled={myRole?.role === "detective" || myRole?.role === "mafia"} className={`${myRole?.role === "detective" || myRole?.role === "mafia" ? " text-error cursor-pointer" : "cursor-not-allowed text-white/50"} text-base `}><GiPistolGun /></button>
+                      <button disabled={myRole?.role === "doctor"} className={`${myRole?.role === "doctor" ? " text-success cursor-pointer" : "cursor-not-allowed text-white/50"} text-base `}><LiaBriefcaseMedicalSolid /></button>
                       <button disabled={false} className='cursor-pointer text-lg text-info'> <TbSpeakerphone /></button>
                     </div>
 
                     <span className={`font-bold ${user.isAlive ? "text-success" : "text-error"} flex items-center gap-1`}>
-                      <span className={`${user.isAlive ? "animate-pulse" : ""}`}>{user.isAlive ? <FaHeartPulse /> : <IoMdHeartDislike />}</span> <span className='text-xs'>{user.isAlive ? "Alive" : "Dead"}</span>
+                      <span className={`${user?.isAlive ? "animate-pulse" : ""}`}>{user?.isAlive ? <FaHeartPulse /> : <IoMdHeartDislike />}</span> <span className='text-xs'>{user?.isAlive ? "Alive" : "Dead"}</span>
                     </span>
                   </div>
 
