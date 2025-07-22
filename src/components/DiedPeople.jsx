@@ -77,7 +77,6 @@ const DiedPeople = ({ players, myRole }) => {
                         </button>
                       </div>
                     )}
-
                     <span className={`font-bold ${user.isAlive ? "text-success" : "text-error"} flex items-center gap-1`}>
                       <span className={`${user?.isAlive ? "animate-pulse" : ""}`}>
                         {user?.isAlive ? <FaHeartPulse /> : <IoMdHeartDislike />}
