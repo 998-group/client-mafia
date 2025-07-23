@@ -6,6 +6,7 @@ import GameChat from "../components/GameChat";
 import GameCard from "../components/GameCard";
 import DiedPeople from "../components/DiedPeople";
 import Timer from "../components/Timer";
+import { toast } from "react-toastify";
 
 const Game = () => {
   const { roomId } = useParams();
@@ -18,6 +19,7 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [phase, setPhase] = useState("waiting");
   const [myRole, setMyRole] = useState(null);
+  const [showModal, setShowModal] = useState(false); // ⬅️ Новый state
 
   useEffect(() => {
     const intv = setInterval(() => {
@@ -38,8 +40,8 @@ const Game = () => {
     socket.emit("get_room_phase", roomId);
     socket.once("room_phase", ({ phase }) => {
       if (phase !== "waiting") {
-        alert("Игра уже идёт");
-        navigate("/");
+        setShowModal(true); // ⬅️ Показываем модалку
+        setTimeout(() => navigate("/"), 3000); // ⬅️ Возврат через 3 сек
       }
     });
   }, [roomId, navigate]);
@@ -63,7 +65,7 @@ const Game = () => {
     if (!myUserId) return;
     socket.on("game_players", game => {
       const me = game.players.find(p => p.userId.toString() === myUserId);
-      if(me?.gameRole) {
+      if (me?.gameRole) {
         setMyRole({
           role: me.gameRole,
           img: getRoleImage(me.gameRole),
@@ -92,14 +94,33 @@ const Game = () => {
     peaceful: "Вы — мирный"
   }[role] || "Неизвестная роль");
 
-  if (isLoading) return (
-    <div className="flex justify-center items-center h-screen">
-      <p>Loading...</p>
-    </div>
-  );
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 relative">
+      {/* ✅ Модалка */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full text-center">
+            <h2 className="text-xl font-bold mb-4 text-red-600">Ошибка входа</h2>
+            <p className="mb-2">Вы не можете зайти в эту комнату.</p>
+            <p className="mb-4 text-sm">Игра уже началась.</p>
+            <button
+              onClick={() => navigate("/")}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Вернуться назад
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold mb-4">Страница игры</h1>
 
       <div className="mb-6">
@@ -107,7 +128,7 @@ const Game = () => {
         <ul>
           {rooms.map(r => (
             <li key={r.roomId} className="mb-2">
-              {r.roomName} [{r.players.length}] — {r.phase} {" "}
+              {r.roomName} [{r.players.length}] — {r.phase}{" "}
               {r.phase === "waiting" && (
                 <button
                   className="ml-2 text-blue-600"
@@ -129,12 +150,15 @@ const Game = () => {
       </div>
 
       <div className="flex space-x-4">
-        <div className="w-1/4"><DiedPeople players={players}/></div>
-        <div className="w-1/2"><GameChat/></div>
+        <div className="w-1/4">
+          <DiedPeople players={players} />
+        </div>
+        <div className="w-1/2">
+          <GameChat />
+        </div>
         <div className="w-1/4 space-y-4">
-          <Timer day={phase} time={timeLeft}/>
-          {myRole ? <GameCard card={myRole}/> :
-            <p>Роль загружается...</p>}
+          <Timer day={phase} time={timeLeft} />
+          {myRole ? <GameCard card={myRole} /> : <p>Роль загружается...</p>}
         </div>
       </div>
     </div>
