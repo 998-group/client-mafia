@@ -6,16 +6,19 @@ import { GiPistolGun } from "react-icons/gi";
 import { LiaBriefcaseMedicalSolid } from "react-icons/lia";
 import { FaHeartPulse } from "react-icons/fa6";
 import { IoMdHeartDislike } from "react-icons/io";
+import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
 
 const DiedPeople = ({ players, myRole }) => {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const user = useSelector((state) => state?.auth?.user);
-
+  const [voiceCount, setVoiceCount] = useState(0);
+  const [myVoice, setMyVoice] = useState(false);
   useEffect(() => {
     setUsers(players);
   }, [players]);
+console.log("Users:", user);
 
   useEffect(() => {
     socket.emit("get_game_players", user?._id);
@@ -24,6 +27,16 @@ const DiedPeople = ({ players, myRole }) => {
   const filteredUsers = users.filter((user) =>
     user?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleVoice = (userId) => {
+      socket.emit("add_voice",  {selected: userId , user: user.user?._id});
+      setMyVoice(true);
+  }
+
+  const handleRemoceVoice = (userId) => {
+      socket.emit("remove_voice", {userId, user: user.user?._id});
+      setMyVoice(false);
+  }
 
   return (
     <div className='w-full flex-1 rounded-l-2xl drop-shadow-2xl h-full bg-base-300 p-2 border-2 border-primary border-r-0'>
@@ -69,12 +82,24 @@ const DiedPeople = ({ players, myRole }) => {
                         >
                           <LiaBriefcaseMedicalSolid />
                         </button>
-                        <button
-                          disabled={false}
-                          className='cursor-pointer text-lg text-info'
-                        >
-                          <TbSpeakerphone />
-                        </button>
+                        {myVoice ? (
+                          <button
+                            disabled={!myVoice}
+                            className={`${!myVoice ? "text-warning cursor-not-allowed" : "cursor-pointer "} text-info`}
+                            onClick={() => { handleRemoceVoice(user._id) }}
+                          >
+                          <ImCross className='text-error' />
+                          </button>
+                          
+                        ) : (
+                          <button
+                            disabled={myVoice}
+                            className={`${myVoice ? "text-warning cursor-not-allowed" : "cursor-pointer "} text-info`}
+                            onClick={() => { handleVoice(user._id) }}
+                          >
+                            <TbSpeakerphone />
+                          </button>
+                        )}
                       </div>
                     )}
                     <span className={`font-bold ${user.isAlive ? "text-success" : "text-error"} flex items-center gap-1`}>
