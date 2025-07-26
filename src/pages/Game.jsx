@@ -19,7 +19,6 @@ const Game = () => {
   const [phase, setPhase] = useState("started");
   const [myRole, setMyRole] = useState(null);
 
-  // ⏳ Loading splash (progress bar)
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -34,7 +33,6 @@ const Game = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 📥 Timer update listener
   useEffect(() => {
     const handleTimerUpdate = ({ timeLeft }) => {
       console.log("⏰ Timer received:", timeLeft);
