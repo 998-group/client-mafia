@@ -1,4 +1,5 @@
 import React from 'react';
+import { Clock, Sun, Moon, AlertCircle, Skull } from 'lucide-react';
 
 const Timer = ({ day, time }) => {
   const formatCountdown = (totalSeconds) => {
@@ -12,42 +13,34 @@ const Timer = ({ day, time }) => {
 
   const getPhaseLabel = () => {
     switch (day) {
-      case "day": return "🌞 Кун (Day)";
-      case "night": return "🌚 Тун (Night)";
-      case "ended": return "🏁 O‘yin tugadi";
-      case "started": return "🚦 Boshlanishi...";
-      default: return "⏳ Kuting...";
+      case "day": return { icon: <Sun className="w-4 h-4" />, label: "Day Phase" };
+      case "night": return { icon: <Moon className="w-4 h-4" />, label: "Night Phase" };
+      case "ended": return { icon: <Skull className="w-4 h-4" />, label: "Game Over" };
+      case "started": return { icon: <Clock className="w-4 h-4" />, label: "Game Starting" };
+      default: return { icon: <AlertCircle className="w-4 h-4" />, label: "Loading..." };
     }
   };
 
-  const getImageForPhase = () => {
-    switch (day) {
-      case "day":
-        return "https://img.freepik.com/free-vector/illustration-sunset-sky-with-clouds_33099-2387.jpg";
-      case "night":
-        return "https://img.freepik.com/premium-photo/contemporary-abstract-gradient-sky-background-with-naive-stars_1034924-5821.jpg";
-      case "started":
-        return "https://wallpapercat.com/w/full/f/b/c/1863196-1920x1080-desktop-full-hd-mafia-game-series-wallpaper-photo.jpg";
-      default:
-        return "https://c4.wallpaperflare.com/wallpaper/493/210/439/game-ends-game-ends-poster-wallpaper-preview.jpg";
-    }
-  };
+  const { icon, label } = getPhaseLabel();
 
   return (
-    <div className="relative w-full h-60 rounded-xl overflow-hidden shadow-md">
-      <img
-        src={getImageForPhase()}
-        alt="phase"
-        className="w-full h-full object-cover rounded-xl"
-      />
+    <div className="p-6 space-y-4">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <Clock className="w-6 h-6 text-cyan-400" />
+          <h3 className="text-lg font-bold text-white">Time Remaining</h3>
+        </div>
 
-      {/* Glassy badge timer */}
-      <div className="absolute bottom-3 right-3 bg-base-100/60 backdrop-blur-sm text-base-content rounded-xl px-5 py-2 border border-base-300 shadow-md">
-        <p className="font-semibold text-sm">{getPhaseLabel()}</p>
-        <div className="countdown font-mono text-xl tracking-wider">
-          <span>{String(hours).padStart(2, '0')}</span>:
-          <span>{String(minutes).padStart(2, '0')}</span>:
-          <span>{String(seconds).padStart(2, '0')}</span>
+        <div className="relative">
+          <div className="w-24 h-24 mx-auto bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <span className="text-2xl font-bold text-white">{time}s</span>
+          </div>
+          <div className="absolute inset-0 w-24 h-24 mx-auto border-4 border-white/20 rounded-full animate-pulse"></div>
+        </div>
+
+        <div className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white flex items-center justify-center gap-2">
+          {icon}
+          <span>{label}</span>
         </div>
       </div>
     </div>
