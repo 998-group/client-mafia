@@ -1,4 +1,3 @@
-// ✅ Full fixed Game.jsx (with always-emitted timer and roles)
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -19,7 +18,6 @@ const Game = () => {
   const [phase, setPhase] = useState("started");
   const [myRole, setMyRole] = useState(null);
 
-  // ⏳ Loading splash (progress bar)
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -34,51 +32,37 @@ const Game = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 📥 Timer update listener
+  useEffect(() => {
+    socket.emit('get_players', roomId);
+    const handleUpdatePlayers = (playersFromServer) => {
+      setPlayers(playersFromServer);
+    };
+    socket.on('update_players', handleUpdatePlayers);
+    return () => socket.off('update_players', handleUpdatePlayers);
+  }, [roomId]);
+
   useEffect(() => {
     const handleTimerUpdate = ({ timeLeft }) => {
-      console.log("⏰ Timer received:", timeLeft);
       setTimeLeft(timeLeft);
     };
     socket.on("timer_update", handleTimerUpdate);
     return () => socket.off("timer_update", handleTimerUpdate);
-  }, []);
+  }, [roomId]);
 
-  useEffect(() => {
-    console.log("My role updated:", myRole);
-  }, [myRole])
-
-  // 📥 Game phase listener
   useEffect(() => {
     const handleGamePhase = (gameRoomData) => {
-      console.log("🎯 Phase:", gameRoomData.phase);
       setPhase(gameRoomData.phase);
     };
     socket.on("game_phase", handleGamePhase);
     return () => socket.off("game_phase", handleGamePhase);
   }, []);
 
-  // 📥 update_players listener
-  useEffect(() => {
-    const handleUpdatePlayers = (playersFromServer) => {
-      console.log("Players from server:", playersFromServer);
-      setPlayers(playersFromServer);
-    };
-    socket.on("update_players", handleUpdatePlayers);
-    return () => socket.off("update_players", handleUpdatePlayers);
-  }, []);
-
-  // 📥 game_players listener (used to extract my role)
   useEffect(() => {
     if (!myUserId) return;
-    
     const handleGamePlayers = (gameRoom) => {
       const me = gameRoom.players.find(
         (p) => p.userId?.toString() === myUserId?.toString()
       );
-
-      console.log("GAME ROOOOOOOOOOOOOOOOM : ", gameRoom);
-
       if (!me || !me.gameRole) return;
 
       const roleData = {
@@ -86,21 +70,12 @@ const Game = () => {
         img: getRoleImage(me.gameRole),
         title: getRoleTitle(me.gameRole),
       };
-
       setMyRole(roleData);
     };
     socket.on("game_players", handleGamePlayers);
     return () => socket.off("game_players", handleGamePlayers);
   }, [myUserId]);
 
-  // 📤 get_players emit (fetch current state)
-  useEffect(() => {
-    if (roomId) {
-      socket.emit("get_players", roomId);
-    }
-  }, [roomId]);
-
-  // 🎭 Role images
   const getRoleImage = (role) => {
     switch (role) {
       case "mafia":
@@ -116,7 +91,6 @@ const Game = () => {
     }
   };
 
-  // 🎭 Role descriptions
   const getRoleTitle = (role) => {
     switch (role) {
       case "mafia":
@@ -132,38 +106,39 @@ const Game = () => {
     }
   };
 
-  // 💡 Splash screen loader
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <progress className="progress progress-accent w-96" value={progress} max="100" />
-        <p className="mt-2 text-lg font-bold">{progress}%</p>
+      <div className="flex flex-col items-center justify-center h-screen bg-base-200 text-base-content">
+        <progress className="progress progress-warning w-72" value={progress} max="100" />
+        <p className="mt-4 text-lg font-bold tracking-wider">{progress}% Yuklanmoqda...</p>
       </div>
     );
   }
 
-  // 👇 return() qismi keyin yoziladi...
-
-
   return (
-    <div className="flex h-screen p-3">
-      <div className="w-1/4 h-full flex-1 flex flex-col">
+    <div className="flex h-screen gap-4 p-3 bg-base-100 text-base-content">
+      {/* Left - Players List */}
+      <div className="w-1/4 bg-base-200 border border-base-300 rounded-xl shadow-md">
         <DiedPeople players={players} myRole={myRole} />
       </div>
 
-      <div className="w-2/4 h-full flex flex-col">
-        <div className="h-full w-full justify-center flex-1">
-          <GameChat />
-        </div>
+      {/* Center - Chat */}
+      <div className="w-2/4 bg-base-200 border border-base-300 rounded-xl shadow-md">
+        <GameChat />
       </div>
 
-      <div className="w-1/4 h-full flex flex-col">
-        <Timer day={phase} time={timeLeft} />
-        {myRole ? (
-          <GameCard card={myRole} />
-        ) : (
-          <div className="text-center text-warning mt-5">⏳ Rolingiz yuklanmoqda...</div>
-        )}
+      {/* Right - Timer and Role Card */}
+      <div className="w-1/4 flex flex-col gap-4">
+        <div className="bg-base-200 border border-base-300 rounded-xl shadow-md">
+          <Timer day={phase} time={timeLeft} />
+        </div>
+        <div className="bg-base-200 border border-base-300 rounded-xl shadow-md flex-1 overflow-hidden">
+          {myRole ? (
+            <GameCard card={myRole} />
+          ) : (
+            <div className="text-center text-warning mt-5">⏳ Rolingiz yuklanmoqda...</div>
+          )}
+        </div>
       </div>
     </div>
   );

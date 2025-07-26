@@ -10,45 +10,45 @@ const Timer = ({ day, time }) => {
 
   const { hours, minutes, seconds } = formatCountdown(time);
 
+  const getPhaseLabel = () => {
+    switch (day) {
+      case "day": return "🌞 Кун (Day)";
+      case "night": return "🌚 Тун (Night)";
+      case "ended": return "🏁 O‘yin tugadi";
+      case "started": return "🚦 Boshlanishi...";
+      default: return "⏳ Kuting...";
+    }
+  };
+
+  const getImageForPhase = () => {
+    switch (day) {
+      case "day":
+        return "https://img.freepik.com/free-vector/illustration-sunset-sky-with-clouds_33099-2387.jpg";
+      case "night":
+        return "https://img.freepik.com/premium-photo/contemporary-abstract-gradient-sky-background-with-naive-stars_1034924-5821.jpg";
+      case "started":
+        return "https://wallpapercat.com/w/full/f/b/c/1863196-1920x1080-desktop-full-hd-mafia-game-series-wallpaper-photo.jpg";
+      default:
+        return "https://c4.wallpaperflare.com/wallpaper/493/210/439/game-ends-game-ends-poster-wallpaper-preview.jpg";
+    }
+  };
+
   return (
-    <div className='p-3 relative h-1/3'>
-      <div className='w-full h-full'>
-        {day === "day" ? (
-          <img
-            src="https://img.freepik.com/free-vector/illustration-sunset-sky-with-clouds_33099-2387.jpg?semt=ais_hybrid&w=740"
-            className='w-full h-full rounded-xl'
-            alt=""
-          />
-        ) : day === "night" ? (
-          <img
-            src="https://img.freepik.com/premium-photo/contemporary-abstract-gradient-sky-background-with-naive-stars_1034924-5821.jpg"
-            className='w-full h-full rounded-xl'
-            alt=""
-          />
-        ) : day === "started" ? (
-          <img src="https://wallpapercat.com/w/full/f/b/c/1863196-1920x1080-desktop-full-hd-mafia-game-series-wallpaper-photo.jpg"
-            alt=""
-            className='w-full h-full rounded-xl'
-          />
-        ) : (
-          <img src="https://c4.wallpaperflare.com/wallpaper/493/210/439/game-ends-game-ends-poster-wallpaper-preview.jpg"
-            alt=""
-            className='w-full h-full rounded-xl'
-          />
-        )}
-      </div>
+    <div className="relative w-full h-60 rounded-xl overflow-hidden shadow-md">
+      <img
+        src={getImageForPhase()}
+        alt="phase"
+        className="w-full h-full object-cover rounded-xl"
+      />
 
-      <div className='absolute bottom-3 flex flex-col gap-1 right-3 bg-accent/40 text-error filter backdrop-blur-xs px-6 rounded-xl py-2'>
-        <p className='font-bold'>
-          {day === "day" ? "День" : day === "night" ? "Ночь" : day === "ended" ? "Конец игры" : "Старт"}
-        </p>
-
-
-        <span className="countdown font-mono text-2xl flex gap-0.5">
-          <span style={{ "--value": hours }}>{hours.toString().padStart(2, '0')}</span>:
-          <span style={{ "--value": minutes }}>{minutes.toString().padStart(2, '0')}</span>:
-          <span style={{ "--value": seconds }}>{seconds.toString().padStart(2, '0')}</span>
-        </span>
+      {/* Glassy badge timer */}
+      <div className="absolute bottom-3 right-3 bg-base-100/60 backdrop-blur-sm text-base-content rounded-xl px-5 py-2 border border-base-300 shadow-md">
+        <p className="font-semibold text-sm">{getPhaseLabel()}</p>
+        <div className="countdown font-mono text-xl tracking-wider">
+          <span>{String(hours).padStart(2, '0')}</span>:
+          <span>{String(minutes).padStart(2, '0')}</span>:
+          <span>{String(seconds).padStart(2, '0')}</span>
+        </div>
       </div>
     </div>
   );
