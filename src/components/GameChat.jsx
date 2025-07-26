@@ -5,9 +5,8 @@ import { FaRegPaperPlane } from "react-icons/fa";
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { IoArrowBackOutline } from "react-icons/io5";
+import  socket  from '../socket'
 
-
-const socket = io("http://localhost:5000");
 
 const GameChat = () => {
     const [message, setMessage] = useState('');

@@ -8,13 +8,16 @@ import { FaHeartPulse } from "react-icons/fa6";
 import { IoMdHeartDislike } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
+import User from '../../../server-mafia/src/models/User';
 
 const DiedPeople = ({ players, myRole }) => {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const user = useSelector((state) => state?.auth?.user);
   const [voiceCount, setVoiceCount] = useState(0);
   const [myVoice, setMyVoice] = useState(false);
+  const user = useSelector((state) => state?.auth?.user);
+  console.log("user", user)
+
   useEffect(() => {
     setUsers(players);
   }, [players]);
@@ -29,7 +32,7 @@ console.log("Users:", user);
   );
 
   const handleVoice = (userId) => {
-      socket.emit("add_voice",  {selected: userId , user: user.user?._id});
+      socket.emit("vote_player",  {selected: userId , user: user.user?._id});
       setMyVoice(true);
   }
 
