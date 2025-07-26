@@ -7,7 +7,7 @@ const GameCard = ({ card }) => {
     if (!card) return setVisible(false);
 
     setVisible(false);
-    const timeout = setTimeout(() => setVisible(true), 50); // Trigger fade-in
+    const timeout = setTimeout(() => setVisible(true), 50);
     return () => clearTimeout(timeout);
   }, [card?.img, card?.title, card?.role]);
 
@@ -22,22 +22,25 @@ const GameCard = ({ card }) => {
   }
 
   return (
-    <div className="overflow-hidden p-3 transition-all duration-500">
+    <div className={`p-4 transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <div
-        className={`card bg-base-300 shadow-lg rounded-xl overflow-hidden transform transition-all duration-500 ease-in-out ${
-          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        className={`card w-full shadow-xl border border-base-300 bg-base-100/60 backdrop-blur-md rounded-2xl overflow-hidden transform duration-500 ease-in-out ${
+          visible ? 'scale-100' : 'scale-95'
         }`}
       >
-        <figure className="h-40 overflow-hidden">
+        {/* 🖼 Role Image */}
+        <figure className="h-40 w-full overflow-hidden">
           <img
             src={card.img}
-            alt="Role"
-            className="w-full h-full object-cover"
+            alt={card.role}
+            className="object-cover w-full h-full"
           />
         </figure>
-        <div className="p-4">
-          <h2 className="card-title text-xl capitalize">{card.role}</h2>
-          <p className="text-sm mt-2 text-gray-500">{card.title}</p>
+
+        {/* 📜 Role Info */}
+        <div className="p-4 space-y-2">
+          <h2 className="text-xl font-bold capitalize text-primary">{card.role}</h2>
+          <p className="text-sm text-base-content/70 leading-relaxed">{card.title}</p>
         </div>
       </div>
     </div>
