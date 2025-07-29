@@ -14,18 +14,18 @@ const DiedPeople = ({ players, myRole }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [myVoice, setMyVoice] = useState(false);
   const user = useSelector((state) => state?.auth?.user);
-
   useEffect(() => {
     setUsers(players);
   }, [players]);
-
+  
   useEffect(() => {
     socket.emit("get_game_players", user?._id);
   }, []);
-
+  
   const filteredUsers = users.filter((u) =>
     u?.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+);
+console.log("sdf",filteredUsers)
 
   const handleVoice = (userId) => {
     socket.emit("add_voice", { selected: userId, user: user.user?._id });
@@ -38,7 +38,7 @@ const DiedPeople = ({ players, myRole }) => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col p-3 rounded-2xl bg-base-200 border border-base-300">
+    <div className="h-full w-full flex flex-col p-4 rounded-3xl bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 border border-primary/20 shadow-xl backdrop-blur-sm">
       {/* Search */}
       <div className="mb-3">
         <input
@@ -46,7 +46,7 @@ const DiedPeople = ({ players, myRole }) => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="🔍 Search players..."
-          className="input input-bordered w-full"
+          className="input input-bordered w-full bg-base-200/50 border-primary/30 focus:border-primary focus:bg-base-100 transition-all duration-300 shadow-md hover:shadow-lg"
         />
       </div>
 
@@ -58,7 +58,17 @@ const DiedPeople = ({ players, myRole }) => {
           filteredUsers.map((u) => (
             <div
               key={u._id}
-              className="bg-base-100 rounded-xl shadow-md px-3 py-2 flex items-center justify-between hover:shadow-lg transition"
+               className={`
+                bg-gradient-to-r from-base-100 via-base-50 to-base-100 
+                rounded-2xl shadow-lg px-4 py-3 
+                flex items-center justify-between 
+                hover:shadow-xl hover:scale-[1.02] 
+                transition-all duration-300 
+                border border-base-300/50
+                ${!u.isAlive ? 'opacity-70 grayscale-[0.3]' : ''}
+                hover:border-primary/30
+                backdrop-blur-sm
+              `}
             >
               {/* Avatar + Name */}
               <div className="flex items-center gap-3">
@@ -127,7 +137,6 @@ const DiedPeople = ({ players, myRole }) => {
                   {u.isAlive ? (
                     <>
                       <FaHeartPulse className="animate-pulse" />
-                      <span className="text-xs">Alive</span>
                     </>
                   ) : (
                     <>
