@@ -18,8 +18,6 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-
-
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username.trim()) newErrors.username = 'Username is required';

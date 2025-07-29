@@ -1,21 +1,18 @@
-
-import React, { useEffect, useState } from 'react'
-import socket from '../socket'
+import React, { useEffect, useState } from 'react';
+import socket from '../socket';
 import { useSelector } from 'react-redux';
 import { TbSpeakerphone } from "react-icons/tb";
 import { GiPistolGun } from "react-icons/gi";
 import { LiaBriefcaseMedicalSolid } from "react-icons/lia";
 import { FaHeartPulse } from "react-icons/fa6";
 import { IoMdHeartDislike } from "react-icons/io";
-
+import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
 
-
-
-
-const DiedPeople = ({ players }) => {
+const DiedPeople = ({ players, myRole }) => {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [myVoice, setMyVoice] = useState(false);
   const user = useSelector((state) => state?.auth?.user);
 
   useEffect(() => {
@@ -26,58 +23,125 @@ const DiedPeople = ({ players }) => {
     socket.emit("get_game_players", user?._id);
   }, []);
 
-  const filteredUsers = users.filter((user) =>
-    user?.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = users.filter((u) =>
+    u?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleVoice = (userId) => {
+    socket.emit("add_voice", { selected: userId, user: user.user?._id });
+    setMyVoice(true);
+  };
+
+  const handleRemoveVoice = (userId) => {
+    socket.emit("remove_voice", { userId, user: user.user?._id });
+    setMyVoice(false);
+  };
+
   return (
-    <div className='w-full flex-1 rounded-l-2xl drop-shadow-2xl h-full bg-base-300 p-2 border-2 border-primary border-r-0'>
-      <div className=''>
-        <ul className="list rounded-box shadow-xl hover:shadow-2xl transition-all overflow-y-auto flex-1 duration-300">
-          <li className="p-2 text-xs opacity-60 w-full tracking-wide text-base-content">Players List:</li>
+    <div className="h-full w-full flex flex-col p-3 rounded-2xl bg-base-200 border border-base-300">
+      {/* Search */}
+      <div className="mb-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="🔍 Search players..."
+          className="input input-bordered w-full"
+        />
+      </div>
 
-          <div className="px-2 pb-3">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Search player..."
-              className='input input-bordered input-primary w-full focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200'
-            />
-          </div>
+      {/* Player List */}
+      <div className="overflow-y-auto flex-1 space-y-2 pr-1">
+        <h2 className="text-sm text-base-content/60 font-semibold mb-2">Players:</h2>
 
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map(user => (
-              <li key={user.id} className="list-row flex items-center gap-2 p-2 hover:bg-accent/10 rounded-lg transition">
-                <img className="size-10 rounded-box" src={user.img || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIlzxQ7OQIRWzgQRZv0-6Y6J7_ecKpPitmBA&s"} alt={user.username} />
-                <div className="flex justify-between w-full">
-                  <div className="font-medium min-w-28">{user?.username}</div>
-                  <div className='flex items-center gap-1 flex-1 justify-between'>
+        {filteredUsers.length > 0 ? (
+          filteredUsers.map((u) => (
+            <div
+              key={u._id}
+              className="bg-base-100 rounded-xl shadow-md px-3 py-2 flex items-center justify-between hover:shadow-lg transition"
+            >
+              {/* Avatar + Name */}
+              <div className="flex items-center gap-3">
+                <img
+                  src={u.img || "https://api.dicebear.com/7.x/thumbs/svg?seed=" + u.username}
+                  className="w-10 h-10 rounded-xl border border-base-300"
+                  alt="avatar"
+                />
+                <div className="text-base font-medium">{u.username}</div>
+              </div>
 
-                    <div className='mr-4 flex items-center gap-2'>
-                      <button disabled={false} className='cursor-pointer text-base text-warning '><LuUserRoundSearch /></button>
+              {/* Role Actions */}
+              <div className="flex items-center gap-2">
+                {u.isAlive && (
+                  <>
+                    {/* 🔍 Detective */}
+                    <button
+                      disabled={myRole?.role !== "detective"}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "detective" ? "btn-disabled" : "btn-warning"}`}
+                      data-tip="Detect"
+                    >
+                      <LuUserRoundSearch />
+                    </button>
 
-                      <button disabled={false} className='cursor-pointer text-lg text-success'><LiaBriefcaseMedicalSolid /></button>
+                    {/* 🔫 Mafia */}
+                    <button
+                      disabled={myRole?.role !== "mafia"}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "mafia" ? "btn-disabled" : "btn-error"}`}
+                      data-tip="Eliminate"
+                    >
+                      <GiPistolGun />
+                    </button>
 
-                      <button disabled={false} className='cursor-pointer text-lg text-error'><GiPistolGun /></button>
+                    {/* 🩺 Doctor */}
+                    <button
+                      disabled={myRole?.role !== "doctor"}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "doctor" ? "btn-disabled" : "btn-success"}`}
+                      data-tip="Heal"
+                    >
+                      <LiaBriefcaseMedicalSolid />
+                    </button>
 
-                      <button disabled={false} className='cursor-pointer text-lg text-info'> <TbSpeakerphone /></button>
-                    </div>
+                    {/* 📣 Voice Vote */}
+                    {myVoice ? (
+                      <button
+                        onClick={() => handleRemoveVoice(u._id)}
+                        className="btn btn-xs btn-outline btn-error tooltip"
+                        data-tip="Remove vote"
+                      >
+                        <ImCross />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleVoice(u._id)}
+                        className="btn btn-xs btn-outline btn-info tooltip"
+                        data-tip="Give vote"
+                      >
+                        <TbSpeakerphone />
+                      </button>
+                    )}
+                  </>
+                )}
 
-                    <span className={`font-bold ${user.isAlive ? "text-success" : "text-error"} flex items-center gap-1`}>
-                      <span className={`${user.isAlive ? "animate-pulse" : ""}`}>{user.isAlive ? <FaHeartPulse /> : <IoMdHeartDislike />}</span> <span className='text-xs'>{user.isAlive ? "Alive" : "Dead"}</span>
-                    </span>
-                  </div>
-
+                {/* 💓 Alive / ☠️ Dead */}
+                <div className={`flex items-center gap-1 font-semibold ${u.isAlive ? "text-success" : "text-error"}`}>
+                  {u.isAlive ? (
+                    <>
+                      <FaHeartPulse className="animate-pulse" />
+                      <span className="text-xs">Alive</span>
+                    </>
+                  ) : (
+                    <>
+                      <IoMdHeartDislike />
+                      <span className="text-xs">Dead</span>
+                    </>
+                  )}
                 </div>
-              </li>
-            ))
-          ) : (
-            <div className="text-center text-sm text-error py-4">
-              ⚠️ Data not found
+              </div>
             </div>
-          )}
-        </ul>
+          ))
+        ) : (
+          <div className="text-center text-error mt-4">⚠️ No players found</div>
+        )}
       </div>
     </div>
   );
