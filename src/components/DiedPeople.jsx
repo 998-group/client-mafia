@@ -71,14 +71,13 @@ const DiedPeople = ({ players, myRole }) => {
                 <div className="text-base font-medium">{u.username}</div>
               </div>
 
-              {/* Role Actions */}
               <div className="flex items-center gap-2">
                 {u.isAlive && (
                   <>
                     {/* 🔍 Detective */}
                     <button
                       disabled={myRole?.role !== "detective"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "detective" ? "btn-disabled" : "btn-warning"}`}
+                      className="btn btn-xs btn-outline tooltip btn-warning"
                       data-tip="Detect"
                     >
                       <LuUserRoundSearch />
@@ -87,7 +86,7 @@ const DiedPeople = ({ players, myRole }) => {
                     {/* 🔫 Mafia */}
                     <button
                       disabled={myRole?.role !== "mafia"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "mafia" ? "btn-disabled" : "btn-error"}`}
+                      className="btn btn-xs btn-outline tooltip btn-error"
                       data-tip="Eliminate"
                     >
                       <GiPistolGun />
@@ -96,7 +95,7 @@ const DiedPeople = ({ players, myRole }) => {
                     {/* 🩺 Doctor */}
                     <button
                       disabled={myRole?.role !== "doctor"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "doctor" ? "btn-disabled" : "btn-success"}`}
+                      className="btn btn-xs btn-outline tooltip btn-success"
                       data-tip="Heal"
                     >
                       <LiaBriefcaseMedicalSolid />
