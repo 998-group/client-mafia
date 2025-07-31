@@ -11,7 +11,7 @@ const ChatGlobal = () => {
 
     const sendMessage = async () => {
         socket.emit('send_message', { message: input, user: user })
-    
+
         setInput('');
     }
 
@@ -26,7 +26,7 @@ const ChatGlobal = () => {
         }
     }, [])
 
-  
+
     return (
         <div className='h-full p-4 flex flex-col gap-2'>
             <div className='flex-1 flex flex-col overflow-y-auto'>
@@ -53,5 +53,5 @@ const ChatGlobal = () => {
         </div>
     )
 }
- 
+
 export default ChatGlobal
