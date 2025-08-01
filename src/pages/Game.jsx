@@ -9,6 +9,7 @@ import GameChat from '../components/GameChat';
 import GameCard from '../components/GameCard';
 import Timer from '../components/Timer';
 import socket from '../socket';
+import DiedPeople from '../components/DiedPeople';
 
 const Game = () => {
   const { roomId } = useParams();
@@ -152,33 +153,8 @@ const Game = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex gap-4 text-white overflow-hidden">
       {/* Players List */}
-      <div className="w-1/4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="text-purple-400" />
-          <h2 className="text-lg font-semibold">Players</h2>
-        </div>
-        {players.map((p) => (
-          <div
-            key={p.userId}
-            className={`p-3 mb-3 rounded-xl border flex items-center justify-between transition-all ${
-              p.isAlive
-                ? 'bg-white/10 border-white/20'
-                : 'bg-red-500/10 border-red-400/30 opacity-70'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              {p.isAlive ? <User className="text-green-400" /> : <Skull className="text-red-400" />}
-              <span>{p.username}</span>
-              {p.userId === myUserId && <Crown className="text-yellow-400 w-4 h-4" />}
-            </div>
-            {myRole?.role === 'detective' && (
-              <div className={`text-xs px-2 py-1 rounded-full border ${getRoleColor(p.gameRole)} flex items-center gap-1`}>
-                {getRoleIcon(p.gameRole)}
-                {p.gameRole}
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="w-1/4 h-full flex flex-col">
+        <DiedPeople players={players} myRole={myRole} />
       </div>
 
       {/* Game Chat */}
