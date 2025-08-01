@@ -8,32 +8,127 @@ import { FaHeartPulse } from "react-icons/fa6";
 import { IoMdHeartDislike } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
-
+import {toast } from "react-toastify"
 const DiedPeople = ({ players, myRole }) => {
+  const user = useSelector((state) => state?.auth?.user);
+  const [room, setRoom] = useState()
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [myVoice, setMyVoice] = useState(false);
-  const user = useSelector((state) => state?.auth?.user);
+  const [killPlayer, setKillPlayer] = useState(false)
+  const [gamePhase, setGamePhase] = useState()
   useEffect(() => {
     setUsers(players);
   }, [players]);
-  
+
   useEffect(() => {
     socket.emit("get_game_players", user?._id);
   }, []);
+  useEffect(() => {
+    socket.on("your_socket_id", (socketId) => {
+      console.log("📡 My socket ID:", socketId);
+      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
+    });
+  }, []);
+  useEffect(() => {
+    socket.on("joined_room", (roomId) => {
+      console.log("📡 My room ID:", roomId);
+      setRoom(roomId)
+
+      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
+    });
+  }, []);
+  useEffect(() => {
+    socket.on("game_phase", (gamephase) => {
+      console.log("game_phase:", gamephase.phase);
+      setGamePhase(gamephase.phase)
+    });
+  }, []);
+  useEffect(() => {
+    socket.on("error_message", (errorMsg) => {
+      console.log( errorMsg);
+      toast.error(errorMsg);
+    });
   
+    return () => {
+      socket.off("error_message");
+    };
+  }, []);
+
+
+
   const filteredUsers = users.filter((u) =>
     u?.username?.toLowerCase().includes(searchQuery.toLowerCase())
-);
-console.log("sdf",filteredUsers)
+  );
 
   const handleVoice = (userId) => {
-    socket.emit("add_voice", { selected: userId, user: user.user?._id });
+    if (gamePhase === "started") {
+      toast.error("⛔ Hali o‘yin boshlanmadi");
+      return;
+    }
+    socket.emit("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id });
     setMyVoice(true);
+    toast.success("Siz oyinchiga ovoz berdingiz")
+    console.log("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
+
+  };
+  const handleKill = (selectedPlayerId) => {
+    if (gamePhase === "started") {
+      toast.error("⛔ Hali o‘yin boshlanmadi");
+      return;
+    }
+    console.log("🔫 handleKill chaqirildi:", selectedPlayerId);
+
+    if (!selectedPlayerId) {
+      console.warn("❗ selectedPlayerId yo‘q");
+      return;
+    }
+
+    if (!user?.user?._id) {
+      console.warn("❗ Foydalanuvchi ID yo‘q (user.user._id)");
+      return;
+    }
+
+    socket.emit("mafia_kill", {
+      roomId: room.roomId,
+      killerId: user.user._id,
+      targetId: selectedPlayerId,
+    });
+    toast.success("Siz oyinchini otdingiz")
+    console.log("✅ mafia_kill:", {
+      selected: selectedPlayerId,
+      user: user.user._id,
+      roomId: room.roomId
+    });
+
+    setKillPlayer(true);
   };
 
+  const handleHeal = (selectedPlayerId) => {
+    console.log("🩺 handleHeal:", selectedPlayerId);
+  
+    if (gamePhase === "started") {
+      toast.error("⛔ Hali o‘yin boshlanmadi");
+      return;
+    }
+    if (!selectedPlayerId || !user?.user?._id || !room?.roomId) {
+      toast.error("⚠️ Ma'lumotlar yetarli emas");
+      return;
+    }
+  
+    socket.emit("doctor_heal", {
+      roomId: room.roomId,
+      doctorId: user.user._id,
+      targetId: selectedPlayerId
+    });
+  
+    toast.success("🩺 Siz bemorni davoladingiz");
+  };
+  
   const handleRemoveVoice = (userId) => {
-    socket.emit("remove_voice", { userId, user: user.user?._id });
+    socket.emit("remove_voice", { roomId: room.roomId, userId, user: user.user?._id });
+    toast.success("Siz ovozingizni qaytarib oldingiz")
+    console.log("remove_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
     setMyVoice(false);
   };
 
@@ -58,7 +153,7 @@ console.log("sdf",filteredUsers)
           filteredUsers.map((u) => (
             <div
               key={u._id}
-               className={`
+              className={`
                 bg-gradient-to-r from-base-100 via-base-50 to-base-100 
                 rounded-2xl shadow-lg px-4 py-3 
                 flex items-center justify-between 
@@ -77,7 +172,7 @@ console.log("sdf",filteredUsers)
                   className="w-10 h-10 rounded-xl border border-base-300"
                   alt="avatar"
                 />
-                <div className="text-base font-medium">{u.username}</div>
+                <div className="text-base font-medium max-w-24 truncate">{u.username}</div>
               </div>
 
               {/* Role Actions */}
@@ -96,6 +191,7 @@ console.log("sdf",filteredUsers)
                     {/* 🔫 Mafia */}
                     <button
                       disabled={myRole?.role !== "mafia"}
+                      onClick={() => handleKill(u.userId)}
                       className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "mafia" ? "btn-disabled" : "btn-error"}`}
                       data-tip="Eliminate"
                     >
@@ -105,6 +201,7 @@ console.log("sdf",filteredUsers)
                     {/* 🩺 Doctor */}
                     <button
                       disabled={myRole?.role !== "doctor"}
+                      onClick={() => handleHeal(u.userId)}
                       className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "doctor" ? "btn-disabled" : "btn-success"}`}
                       data-tip="Heal"
                     >
@@ -114,7 +211,7 @@ console.log("sdf",filteredUsers)
                     {/* 📣 Voice Vote */}
                     {myVoice ? (
                       <button
-                        onClick={() => handleRemoveVoice(u._id)}
+                        onClick={() => handleRemoveVoice(u.userId)}
                         className="btn btn-xs btn-outline btn-error tooltip"
                         data-tip="Remove vote"
                       >
@@ -122,7 +219,7 @@ console.log("sdf",filteredUsers)
                       </button>
                     ) : (
                       <button
-                        onClick={() => handleVoice(u._id)}
+                        onClick={() => handleVoice(u.userId)}
                         className="btn btn-xs btn-outline btn-info tooltip"
                         data-tip="Give vote"
                       >
