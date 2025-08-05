@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { io } from "socket.io-client";
+import { FaRegPaperPlane } from 'react-icons/fa';
+import { IoArrowBackOutline } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
-import { FaRegPaperPlane } from "react-icons/fa";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { IoArrowBackOutline } from "react-icons/io5";
-
-// 👇 Создаём соединение с сокет-сервером
-const socket = io("https://server-mafia.onrender.com");
+import socket from '../socket';
 
 const GameChat = () => {
     const [message, setMessage] = useState('');
@@ -18,114 +15,99 @@ const GameChat = () => {
     const params = useParams();
     const navigate = useNavigate();
 
-    const roomId = params.roomId;
-
-    // 🧠 Загружаем сохранённые сообщения из localStorage при старте
     useEffect(() => {
-        const savedMessages = localStorage.getItem(`chat_${roomId}`);
-        if (savedMessages) {
-            setMessages(JSON.parse(savedMessages));
-        }
-
-        // 👋 Заходим в комнату через сокет
-        socket.emit("join_room", {
-            roomId,
-            userId: user?.user?._id,
-            username: user?.user?.username,
-        });
-
+        const roomId = params.roomId;
+        socket.emit("join_room", { roomId, userId: user?.user?._id, username: user?.user?.username });
         return () => {
-            // socket.emit("leave_room", { roomId }); // можно включить если сервер это обрабатывает
+            console.log("🔴 Left room:", roomId);
         };
-    }, [roomId, user]);
+    }, []);
 
-    // 📥 Получение новых сообщений по сокету
     useEffect(() => {
         const handleReceiveMessage = (receivedMessage) => {
             setMessages(prev => [...prev, receivedMessage]);
         };
-
         socket.on("receive_message", handleReceiveMessage);
-
-        return () => {
-            socket.off("receive_message", handleReceiveMessage);
-        };
+        return () => socket.off("receive_message", handleReceiveMessage);
     }, []);
 
-    // 💾 Сохраняем все сообщения в localStorage при каждом изменении
-    useEffect(() => {
-        localStorage.setItem(`chat_${roomId}`, JSON.stringify(messages));
-    }, [messages, roomId]);
-
-    // 🔙 Назад на главную
-    const handleBack = () => {
-        navigate('/');
-    };
-
-    // 📤 Отправка сообщений
     const handleSendMessage = () => {
         if (!message.trim()) return;
 
         const chatMessage = {
             text: message,
-            name: user?.user?.username || "Неизвестный",
+            name: user?.user?.username,
             avatar: "https://cdn-icons-png.flaticon.com/512/6858/6858504.png",
             alignment: "end",
             bubbleStyle: "chat-bubble-primary",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
-        // Отправляем сообщение в комнату
-        socket.emit("send_message", { roomId, message: chatMessage });
-
+        socket.emit("send_message", { roomId: params.roomId, message: chatMessage });
         setMessage('');
     };
 
-    // 😁 Добавление эмодзи
     const handleEmojiClick = (emojiData) => {
-        setMessage(prev => prev + emojiData.emoji);
+        setMessage((prev) => prev + emojiData.emoji);
+    };
+
+    const handleBack = () => {
+        navigate('/');
     };
 
     return (
-        <div className='bg-base-100 h-full flex flex-col border-2 border-primary rounded-r-2xl'>
-            {/* 🧠 Хедер */}
-            <div className='flex w-full bg-teal border-b-2 shadow-primary border-primary p-2 justify-between items-center'>
-                <div className='flex items-center gap-3'>
-                    <IoArrowBackOutline className='text-3xl border-2 border-primary cursor-pointer rounded-full h-8 w-8' onClick={handleBack} />
-                    <img src="https://cdn-icons-png.flaticon.com/512/6858/6858504.png" alt="Avatar" className='w-10 h-10 rounded-full' />
-                    <p className='font-bold text-2xl'>Mafia chat</p>
+        <div className="h-full flex flex-col rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-lg">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#0f0c29] via-[#302b63] to-[#24243e] rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                    <IoArrowBackOutline
+                        onClick={handleBack}
+                        className="text-white text-2xl cursor-pointer border border-primary p-1 rounded-full hover:bg-white/10"
+                    />
+                    <img
+                        src="https://cdn-icons-png.flaticon.com/512/6858/6858504.png"
+                        alt="avatar"
+                        className="w-10 h-10 rounded-full"
+                    />
+                    <p className="text-white text-xl font-semibold">Mafia Chat</p>
                 </div>
             </div>
 
-            <div className='flex-1 overflow-y-auto p-4 space-y-2 items-center'>
-                {messages.map((msg, index) => (
-                    <div key={index} className={`flex gap-2 items-center chat chat-${msg?.alignment}`}>
-                        <img src={msg?.avatar} alt="Avatar" className="size-14" />
-                        <div className={`${msg?.bubbleStyle} chat-bubble flex flex-col`}>
-                            <p className='text-sm'>{msg.name}</p>
-                            <span>{msg?.text}</span>
-                            <span className='text-end text-xs'>{msg?.timestamp}</span>
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={`chat chat-${msg.alignment} flex min-w-120`}>
+                        <img src={msg.avatar} alt="Avatar" className="size-12 rounded-full shadow flex mt-8" />
+                        <div className={`${msg.bubbleStyle} chat-bubble bg-white/20 backdrop-blur-md border border-white/20 text-white`}>
+                            <div className='flex flex-col '>
+                                <span className='text-xs'>{msg.name}</span>
+                                <span className="text-sm break-words">{msg.text}</span>
+                                <span className="text-xs text-right opacity-70 mt-1">{msg.timestamp}</span>
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="p-4 border-t border-base-300 flex items-end gap-2">
+            {/* Input & Emoji Picker */}
+            <div className="p-4 border-t border-white/10 bg-white/10 backdrop-blur-md rounded-b-2xl flex gap-2">
                 <div className="relative flex-1">
                     <input
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Введите сообщение..."
-                        className="input input-bordered w-full border border-primary"
+                        placeholder="Xabar yozing..."
+                        className="input input-bordered w-full border border-primary bg-white/20 backdrop-blur-sm text-white placeholder-white/70"
                     />
                     {showEmojiPicker && (
-                        <div className="absolute bottom-full right-0 z-10">
-                            <EmojiPicker onEmojiClick={handleEmojiClick} />
+                        <div className="absolute bottom-full right-0 z-50">
+                            <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" />
                         </div>
                     )}
                 </div>
-                <button onClick={() => setShowEmojiPicker(prev => !prev)} className="btn">😊</button>
+                <button onClick={() => setShowEmojiPicker((prev) => !prev)} className="btn bg-white/20 text-white hover:bg-white/30">
+                    😊
+                </button>
                 <button onClick={handleSendMessage} className="btn btn-primary">
                     <FaRegPaperPlane />
                 </button>

@@ -18,10 +18,9 @@ const Home = () => {
   const location = useLocation();
   const path = location.pathname;
 
-  const [leaderBoard, setLeaderBoard] = useState([]).sort((a, b) => b.score - a.score)
+  const [leaderBoard, setLeaderBoard] = useState([]);
   const getAllUsers = async () => {
     try {
-
       const request = await fetch("http://localhost:5000/api/auth/users/all", {
         method: "GET",
         headers: {
@@ -32,11 +31,20 @@ const Home = () => {
 
       const response = await request.json();
       console.log("USERS", response);
-      setLeaderBoard(response);
+
+      if (Array.isArray(response)) {
+        setLeaderBoard(response);
+      } else {
+        setLeaderBoard([]); // fallback пустой
+        toast.error(response.message || "Failed to fetch users.");
+      }
     } catch (err) {
       console.log("❌ Error fetching users:", err);
+      setLeaderBoard([]);
     }
   };
+
+
 
   useEffect(() => {
     getAllUsers()
@@ -152,18 +160,20 @@ const Home = () => {
             <p className="font-bold text-3xl">Leaderboard</p>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {leaderBoard?.map((item, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
-                  }`}
-              >
-                <div className="w-10">{idx + 1}</div>
-                <div className="w-1/3">{item?.username}</div>
-                <div className="w-1/3 text-center">{item?.role}</div>
-                <div className="w-1/3 text-end">{item?.score}</div>
-              </div>
-            ))}
+            {leaderBoard
+              ?.sort((a, b) => b.score - a.score)
+              .map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
+                    }`}
+                >
+                  <div className="w-10">{idx + 1}</div>
+                  <div className="w-1/3">{item?.username}</div>
+                  <div className="w-1/3 text-center">{item?.role}</div>
+                  <div className="w-1/3 text-end">{item?.score}</div>
+                </div>
+              ))}
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Clock, Sun, Moon, AlertCircle, Skull } from 'lucide-react';
 
 const Timer = ({ day, time }) => {
   const formatCountdown = (totalSeconds) => {
@@ -10,45 +11,37 @@ const Timer = ({ day, time }) => {
 
   const { hours, minutes, seconds } = formatCountdown(time);
 
+  const getPhaseLabel = () => {
+    switch (day) {
+      case "day": return { icon: <Sun className="w-4 h-4" />, label: "Day Phase" };
+      case "night": return { icon: <Moon className="w-4 h-4" />, label: "Night Phase" };
+      case "ended": return { icon: <Skull className="w-4 h-4" />, label: "Game Over" };
+      case "started": return { icon: <Clock className="w-4 h-4" />, label: "Game Starting" };
+      default: return { icon: <AlertCircle className="w-4 h-4" />, label: "Loading..." };
+    }
+  };
+
+  const { icon, label } = getPhaseLabel();
+
   return (
-    <div className='p-3 relative h-1/3'>
-      <div className='w-full h-full'>
-        {day === "day" ? (
-          <img
-            src="https://img.freepik.com/free-vector/illustration-sunset-sky-with-clouds_33099-2387.jpg?semt=ais_hybrid&w=740"
-            className='w-full h-full rounded-xl'
-            alt=""
-          />
-        ) : day === "night" ? (
-          <img
-            src="https://img.freepik.com/premium-photo/contemporary-abstract-gradient-sky-background-with-naive-stars_1034924-5821.jpg"
-            className='w-full h-full rounded-xl'
-            alt=""
-          />
-        ) : day === "started" ? (
-          <img src="https://wallpapercat.com/w/full/f/b/c/1863196-1920x1080-desktop-full-hd-mafia-game-series-wallpaper-photo.jpg"
-            alt=""
-            className='w-full h-full rounded-xl'
-          />
-        ) : (
-          <img src="https://c4.wallpaperflare.com/wallpaper/493/210/439/game-ends-game-ends-poster-wallpaper-preview.jpg"
-            alt=""
-            className='w-full h-full rounded-xl'
-          />
-        )}
-      </div>
+    <div className="p-6 space-y-4">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <Clock className="w-6 h-6 text-cyan-400" />
+          <h3 className="text-lg font-bold text-white">Time Remaining</h3>
+        </div>
 
-      <div className='absolute bottom-3 flex flex-col gap-1 right-3 bg-accent/40 text-error filter backdrop-blur-xs px-6 rounded-xl py-2'>
-        <p className='font-bold'>
-          {day === "day" ? "День" : day === "night" ? "Ночь" : day === "ended" ? "Конец игры" : "Старт"}
-        </p>
+        <div className="relative">
+          <div className="w-24 h-24 mx-auto bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <span className="text-2xl font-bold text-white">{time}s</span>
+          </div>
+          <div className="absolute inset-0 w-24 h-24 mx-auto border-4 border-white/20 rounded-full animate-pulse"></div>
+        </div>
 
-
-        <span className="countdown font-mono text-2xl flex gap-0.5">
-          <span style={{ "--value": hours }}>{hours.toString().padStart(2, '0')}</span>:
-          <span style={{ "--value": minutes }}>{minutes.toString().padStart(2, '0')}</span>:
-          <span style={{ "--value": seconds }}>{seconds.toString().padStart(2, '0')}</span>
-        </span>
+        <div className="px-4 py-2 rounded-full text-sm font-medium bg-white/10 text-white flex items-center justify-center gap-2">
+          {icon}
+          <span>{label}</span>
+        </div>
       </div>
     </div>
   );
