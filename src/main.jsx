@@ -19,6 +19,7 @@ import Games from './pages/Games.jsx';
 import Game from "./pages/Game.jsx"
 import ChatGlobal from './pages/ChatGlobal.jsx';
 import Profile from './pages/Profile.jsx';
+import Shop from './pages/Shop.jsx';
 
 const router = createBrowserRouter([
   {
@@ -43,7 +44,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/shop",
-            element: <div>shop</div>,
+            element: <Shop/>,
           },
         ]
       },
