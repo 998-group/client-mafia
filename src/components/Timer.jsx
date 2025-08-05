@@ -33,7 +33,11 @@ const Timer = ({ day, time }) => {
 
         <div className="relative">
           <div className="w-24 h-24 mx-auto bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <span className="text-2xl font-bold text-white">{time}s</span>
+            <span className="text-2xl font-bold text-white">
+              {hours.toString().padStart(2, '0')}:
+              {minutes.toString().padStart(2, '0')}:
+              {seconds.toString().padStart(2, '0')}
+            </span>
           </div>
           <div className="absolute inset-0 w-24 h-24 mx-auto border-4 border-white/20 rounded-full animate-pulse"></div>
         </div>

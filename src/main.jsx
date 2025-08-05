@@ -85,7 +85,7 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <RouterProvider router={router} />
-        <ToastContainer />
+        <ToastContainer position="top-right" autoClose={3000} />
       </PersistGate>
     </Provider>
   </StrictMode>,
