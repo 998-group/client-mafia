@@ -48,11 +48,15 @@ console.log("sdf",filteredUsers)
           placeholder="🔍 Search players..."
           className="input input-bordered w-full bg-base-200/50 border-primary/30 focus:border-primary focus:bg-base-100 transition-all duration-300 shadow-md hover:shadow-lg"
         />
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-violet-500">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
       </div>
 
-      {/* Player List */}
-      <div className="overflow-y-auto flex-1 space-y-2 pr-1">
-        <h2 className="text-sm text-base-content/60 font-semibold mb-2">Players:</h2>
+      <div className="overflow-y-auto flex-1 space-y-2 pr-1 scrollbar-thin scrollbar-thumb-violet-300 scrollbar-track-transparent hover:scrollbar-thumb-violet-400">
+        <h2 className="text-sm text-violet-700 font-semibold mb-2 uppercase tracking-wider">Players</h2>
 
         {filteredUsers.length > 0 ? (
           filteredUsers.map((u) => (
@@ -70,77 +74,96 @@ console.log("sdf",filteredUsers)
                 backdrop-blur-sm
               `}
             >
-              {/* Avatar + Name */}
-              <div className="flex items-center gap-3">
-                <img
-                  src={u.img || "https://api.dicebear.com/7.x/thumbs/svg?seed=" + u.username}
-                  className="w-10 h-10 rounded-xl border border-base-300"
-                  alt="avatar"
-                />
-                <div className="text-base font-medium">{u.username}</div>
+              <div className="flex items-center gap-3 group">
+                <div className="relative">
+                  <img
+                    src={u.img || "https://api.dicebear.com/7.x/thumbs/svg?seed=" + u.username}
+                    className="w-10 h-10 rounded-xl border-2 border-violet-300 group-hover:border-violet-500 transition-all"
+                    alt="avatar"
+                  />
+                  {!u.isAlive && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-800/50 to-violet-900/70 backdrop-blur-sm rounded-xl border-2 border-violet-900/60 flex items-center justify-center">
+                      <IoMdHeartDislike className="text-violet-100 text-xl animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                <div className="text-base font-semibold bg-gradient-to-r from-violet-600 to-violet-900 bg-clip-text text-transparent transition-all group-hover:brightness-110">
+                  {u.username}
+                </div>
               </div>
 
-              {/* Role Actions */}
               <div className="flex items-center gap-2">
                 {u.isAlive && (
                   <>
-                    {/* 🔍 Detective */}
-                    <button
-                      disabled={myRole?.role !== "detective"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "detective" ? "btn-disabled" : "btn-warning"}`}
-                      data-tip="Detect"
-                    >
-                      <LuUserRoundSearch />
-                    </button>
-
-                    {/* 🔫 Mafia */}
-                    <button
-                      disabled={myRole?.role !== "mafia"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "mafia" ? "btn-disabled" : "btn-error"}`}
-                      data-tip="Eliminate"
-                    >
-                      <GiPistolGun />
-                    </button>
-
-                    {/* 🩺 Doctor */}
-                    <button
-                      disabled={myRole?.role !== "doctor"}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "doctor" ? "btn-disabled" : "btn-success"}`}
-                      data-tip="Heal"
-                    >
-                      <LiaBriefcaseMedicalSolid />
-                    </button>
-
-                    {/* 📣 Voice Vote */}
-                    {myVoice ? (
+                    {/* Detective */}
+                    <div className="tooltip tooltip-bottom" data-tip="Detect">
                       <button
-                        onClick={() => handleRemoveVoice(u._id)}
-                        className="btn btn-xs btn-outline btn-error tooltip"
-                        data-tip="Remove vote"
+                        disabled={myRole?.role !== "detective"}
+                        className={`btn btn-xs btn-circle btn-outline shadow-md active:scale-95 transition-all duration-150 ${myRole?.role !== "detective"
+                            ? "btn-disabled opacity-40"
+                            : "bg-violet-100 border-violet-400 text-violet-800 hover:bg-violet-200 hover:scale-110"
+                          }`}
                       >
-                        <ImCross />
+                        <LuUserRoundSearch className="w-4 h-4" />
                       </button>
-                    ) : (
+                    </div>
+
+                    {/* Mafia */}
+                    <div className="tooltip tooltip-bottom" data-tip="Eliminate">
                       <button
-                        onClick={() => handleVoice(u._id)}
-                        className="btn btn-xs btn-outline btn-info tooltip"
-                        data-tip="Give vote"
+                        disabled={myRole?.role !== "mafia"}
+                        className={`btn btn-xs btn-circle btn-outline shadow-md active:scale-95 transition-all duration-150 ${myRole?.role !== "mafia"
+                            ? "btn-disabled opacity-40"
+                            : "bg-violet-700 border-violet-800 text-violet-50 hover:bg-violet-800 hover:scale-110"
+                          }`}
                       >
-                        <TbSpeakerphone />
+                        <GiPistolGun className="w-4 h-4" />
                       </button>
-                    )}
+                    </div>
+
+                    {/* Doctor */}
+                    <div className="tooltip tooltip-bottom" data-tip="Heal">
+                      <button
+                        disabled={myRole?.role !== "doctor"}
+                        className={`btn btn-xs btn-circle btn-outline shadow-md active:scale-95 transition-all duration-150 ${myRole?.role !== "doctor"
+                            ? "btn-disabled opacity-40"
+                            : "bg-violet-500 border-violet-600 text-white hover:bg-violet-600 hover:scale-110"
+                          }`}
+                      >
+                        <LiaBriefcaseMedicalSolid className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Voice Vote */}
+                    <div className="tooltip tooltip-bottom" data-tip={myVoice ? "Remove vote" : "Give vote"}>
+                      {myVoice ? (
+                        <button
+                          onClick={() => handleRemoveVoice(u._id)}
+                          className="btn btn-xs btn-circle btn-outline bg-violet-200 border-violet-400 text-violet-800 hover:bg-violet-300 hover:scale-110 transition-transform"
+                        >
+                          <ImCross className="w-3 h-3" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleVoice(u._id)}
+                          className="btn btn-xs btn-circle btn-outline bg-violet-500 border-violet-600 text-white hover:bg-violet-600 hover:scale-110 transition-transform"
+                        >
+                          <TbSpeakerphone className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </>
                 )}
 
-                {/* 💓 Alive / ☠️ Dead */}
-                <div className={`flex items-center gap-1 font-semibold ${u.isAlive ? "text-success" : "text-error"}`}>
+                {/* Status Badge */}
+                <div className={`badge badge-sm ${u.isAlive ? "bg-violet-500 text-white" : "bg-violet-900 text-violet-100"} gap-1 px-2 py-1.5 border-0`}>
                   {u.isAlive ? (
                     <>
                       <FaHeartPulse className="animate-pulse" />
                     </>
                   ) : (
                     <>
-                      <IoMdHeartDislike />
+                      <IoMdHeartDislike className="w-3 h-3" />
                       <span className="text-xs">Dead</span>
                     </>
                   )}
@@ -149,7 +172,12 @@ console.log("sdf",filteredUsers)
             </div>
           ))
         ) : (
-          <div className="text-center text-error mt-4">⚠️ No players found</div>
+          <div className="flex flex-col items-center justify-center py-6 text-violet-800/80">
+            <svg className="w-10 h-10 mb-2 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <span className="font-medium">No players found</span>
+          </div>
         )}
       </div>
     </div>
