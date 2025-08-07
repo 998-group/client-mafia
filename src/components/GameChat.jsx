@@ -27,8 +27,8 @@ const GameChat = () => {
         const handleReceiveMessage = (receivedMessage) => {
             setMessages(prev => [...prev, receivedMessage]);
         };
-        socket.on("receive_message", handleReceiveMessage);
-        return () => socket.off("receive_message", handleReceiveMessage);
+        socket.on("receive_room_message", handleReceiveMessage);
+        return () => socket.off("receive_room_message", handleReceiveMessage);
     }, []);
 
     const handleSendMessage = () => {
@@ -43,7 +43,7 @@ const GameChat = () => {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
-        socket.emit("send_message", { roomId: params.roomId, message: chatMessage });
+        socket.emit("send_room_message", { roomId: params.roomId, message: chatMessage });
         setMessage('');
     };
 
