@@ -97,11 +97,7 @@ const Game = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex gap-4 text-white overflow-hidden">
       {/* Players List */}
-      <div className="w-1/4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="text-purple-400" />
-          <h2 className="text-lg font-semibold">Players</h2>
-        </div>
+      <div className="w-1/4 h-full flex flex-col">
         <DiedPeople players={players} myRole={myRole} />
       </div>
 

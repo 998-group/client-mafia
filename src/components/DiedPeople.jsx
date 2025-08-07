@@ -14,18 +14,18 @@ const DiedPeople = ({ players, myRole }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [myVoice, setMyVoice] = useState(false);
   const user = useSelector((state) => state?.auth?.user);
-
   useEffect(() => {
     setUsers(players);
   }, [players]);
-
+  
   useEffect(() => {
     socket.emit("get_game_players", user?._id);
   }, []);
-
+  
   const filteredUsers = users.filter((u) =>
     u?.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+);
+console.log("sdf",filteredUsers)
 
   const handleVoice = (userId) => {
     socket.emit("add_voice", { selected: userId, user: user.user?._id });
@@ -38,14 +38,15 @@ const DiedPeople = ({ players, myRole }) => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col p-3 rounded-2xl  backdrop-blur-xl shadow-2xl">
-      <div className="mb-3 relative">
+    <div className="h-full w-full flex flex-col p-4 rounded-3xl bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 border border-primary/20 shadow-xl backdrop-blur-sm">
+      {/* Search */}
+      <div className="mb-3">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search players..."
-          className="input w-full pl-10 bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-violet-500/50 border-violet-300 text-violet-900 placeholder-violet-400 transition-all"
+          placeholder="🔍 Search players..."
+          className="input input-bordered w-full bg-base-200/50 border-primary/30 focus:border-primary focus:bg-base-100 transition-all duration-300 shadow-md hover:shadow-lg"
         />
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-violet-500">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +62,17 @@ const DiedPeople = ({ players, myRole }) => {
           filteredUsers.map((u) => (
             <div
               key={u._id}
-              className="bg-gradient-to-r from-violet-50 to-white/80 rounded-xl shadow-sm px-3 py-2 flex items-center justify-between border border-violet-200/70 hover:shadow-xl hover:from-violet-100 hover:to-white transition-all duration-300 hover:scale-[1.01]"
+               className={`
+                bg-gradient-to-r from-base-100 via-base-50 to-base-100 
+                rounded-2xl shadow-lg px-4 py-3 
+                flex items-center justify-between 
+                hover:shadow-xl hover:scale-[1.02] 
+                transition-all duration-300 
+                border border-base-300/50
+                ${!u.isAlive ? 'opacity-70 grayscale-[0.3]' : ''}
+                hover:border-primary/30
+                backdrop-blur-sm
+              `}
             >
               <div className="flex items-center gap-3 group">
                 <div className="relative">
@@ -148,8 +159,7 @@ const DiedPeople = ({ players, myRole }) => {
                 <div className={`badge badge-sm ${u.isAlive ? "bg-violet-500 text-white" : "bg-violet-900 text-violet-100"} gap-1 px-2 py-1.5 border-0`}>
                   {u.isAlive ? (
                     <>
-                      <FaHeartPulse className="animate-pulse w-3 h-3" />
-                      <span className="text-xs">Alive</span>
+                      <FaHeartPulse className="animate-pulse" />
                     </>
                   ) : (
                     <>
