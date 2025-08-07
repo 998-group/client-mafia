@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -10,15 +10,15 @@ import { CgProfile } from "react-icons/cg";
 import { toast } from "react-toastify";
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
+  console.log("USER: ", user);
   const [name, setName] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomInfo, setRoomInfo] = useState([]);
-  const [leaderBoard, setLeaderBoard] = useState([]);
-
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
 
+  const [leaderBoard, setLeaderBoard] = useState([]);
   const getAllUsers = async () => {
     try {
       const request = await fetch("http://localhost:5000/api/auth/users/all", {
@@ -30,17 +30,26 @@ const Home = () => {
       });
 
       const response = await request.json();
-      const sortedUsers = response.sort((a, b) => b.score - a.score);
-      setLeaderBoard(sortedUsers);
+      console.log("USERS", response);
+
+      if (Array.isArray(response)) {
+        setLeaderBoard(response);
+      } else {
+        setLeaderBoard([]); // fallback пустой
+        toast.error(response.message || "Failed to fetch users.");
+      }
     } catch (err) {
       console.log("❌ Error fetching users:", err);
+      setLeaderBoard([]);
     }
   };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
 
+
+  useEffect(() => {
+    getAllUsers()
+  }, [])
+  // 🔁 Real-time rooms listener
   useEffect(() => {
     socket.on("update_rooms", (rooms) => {
       setRooms(rooms);
@@ -53,6 +62,7 @@ const Home = () => {
     socket.emit("request_rooms", "Bekzodkrasavchik");
   }, []);
 
+  // 🎯 Redirect to waiting room after joining
   useEffect(() => {
     socket.on("joined_room", (room) => {
       navigate(`/room/${room.roomId}/waiting`);
@@ -60,15 +70,23 @@ const Home = () => {
     return () => socket.off("joined_room");
   }, []);
 
-  const createRoom = () => {
-    socket.emit("create_room", {
+  const createRoom = async () => {
+    console.log({
       hostId: user?.user?._id,
       roomName: name,
     });
+    try {
+      await socket.emit("create_room", {
+        hostId: user?.user?._id,
+        roomName: name,
+      })
 
-    socket.once("joined_room", (room) => {
-      navigate(`/room/${room.roomId}/waiting`);
-    });
+      socket.once("joined_room", (room) => {
+        navigate(`/room/${room.roomId}/waiting`)
+      })
+    } catch (e) {
+      console.error("Server error:", e);
+    }
   };
 
   const joinRoom = (roomId) => {
@@ -79,10 +97,11 @@ const Home = () => {
     });
   };
 
+  // 👁 Get players in room
   const getRoomInfo = async (roomId) => {
     document.getElementById("my_modal_2").showModal();
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/game/room/${roomId}`);
+      const res = await fetch(import.meta.env.VITE_BACKEND_URL + `/api/game/room/${roomId}`);
       const data = await res.json();
       setRoomInfo(data.players || []);
     } catch (err) {
@@ -93,139 +112,68 @@ const Home = () => {
   useEffect(() => {
     const handleNotification = (data) => {
       if (data?.type === "error") {
-        toast.error(data.message);
+        toast.error(data.message); // yoki toast / modal
       }
     };
+
     socket.on("notification", handleNotification);
-    return () => socket.off("notification", handleNotification);
+
+    return () => {
+      socket.off("notification", handleNotification);
+    };
   }, []);
-
-  const getMedal = (index) => {
-    switch (index) {
-      case 0:
-        return "🥇";
-      case 1:
-        return "🥈";
-      case 2:
-        return "🥉";
-      default:
-        return `#${index + 1}`;
-    }
-  };
-
-  const getRankStyling = (index) => {
-    switch (index) {
-      case 0:
-        return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg transform scale-105";
-      case 1:
-        return "bg-gradient-to-r from-gray-300 to-gray-500 text-white shadow-md";
-      case 2:
-        return "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-md";
-      default:
-        return "bg-base-200 hover:bg-base-300 transition-colors";
-    }
-  };
 
   return (
     <div className="flex h-screen">
       {/* LEFT PANEL */}
       <div className="flex-1 bg-base-300 p-5 flex flex-col items-center">
-        <ul className="menu menu-horizontal w-full gap-5 bg-base-200 rounded-box mt-6">
-          <li className={`flex-1 flex items-center justify-center ${path === "/" ? "bg-primary" : "bg-base-100"}`}>
+        <ul className="menu menu-horizontal  w-full gap-5 bg-base-200 rounded-box mt-6">
+          <li className={`flex-1 flex items-center justify-center ${path === '/' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/">
               <FiMessageCircle className="text-2xl text-success" />
             </Link>
           </li>
-          <li className={`flex-1 flex items-center justify-center ${path === "/profile" ? "bg-primary" : "bg-base-100"}`}>
+
+          <li className={`flex-1 flex items-center justify-center ${path === '/profile' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/profile">
-              <CgProfile className="text-2xl text-warning" />
+              <CgProfile className="text-2xl  text-warning" />
             </Link>
           </li>
-          <li className={`flex-1 flex items-center justify-center ${path === "/shop" ? "bg-primary" : "bg-base-100"}`}>
+
+          <li className={`flex-1 flex items-center justify-center ${path === '/shop' ? "bg-primary" : "bg-base-100"}`}>
             <Link to="/shop">
               <MdOutlineLocalGroceryStore className="text-2xl text-info" />
             </Link>
           </li>
-        </ul>
 
+        </ul>
         <div className="flex-1 bg-base-100 rounded-xl overflow-y-auto w-full mt-2">
           <Outlet />
         </div>
       </div>
 
-      {/* CENTER PANEL - LEADERBOARD */}
+      {/* CENTER PANEL */}
       <div className="flex-1 h-full min-w-6/12 p-5">
-        <div className="h-full w-full bg-base-100 rounded-xl shadow-2xl overflow-hidden flex flex-col">
-          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white">
-            <div className="flex items-center justify-center gap-4 h-20 px-6">
-              <div className="text-4xl animate-bounce">🏆</div>
-              <div>
-                <h1 className="text-2xl font-bold">Leaderboard</h1>
-                <p className="text-sm opacity-90">Top Players Rankings</p>
-              </div>
-            </div>
+        <div className="h-full w-full bg-base-300 rounded-xl drop-shadow-xl overflow-y-auto flex flex-col">
+          <div className="flex items-center justify-center gap-5 h-24 bg-error">
+            <img src="./cup.png" className="size-24" alt="Cup" />
+            <p className="font-bold text-3xl">Leaderboard</p>
           </div>
-
-          <div className="flex-1 overflow-y-auto p-4">
-            {leaderBoard?.length > 0 ? (
-              <div className="space-y-3">
-                {leaderBoard.map((player, idx) => (
-                  <div
-                    key={idx}
-                    className={`rounded-xl p-4 transition-all duration-300 hover:shadow-lg ${getRankStyling(idx)}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-2xl font-bold min-w-[3rem] text-center">
-                          {getMedal(idx)}
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                          {player?.username?.charAt(0)?.toUpperCase() || "?"}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-lg">
-                            {player?.username || "Unknown"}
-                          </div>
-                          <div className={`text-sm opacity-75 ${idx < 3 ? 'text-white' : 'text-base-content'}`}>
-                            {player?.role || "Player"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">{player?.score || 0}</div>
-                        <div className={`text-xs opacity-75 ${idx < 3 ? 'text-white' : 'text-base-content'}`}>
-                          points
-                        </div>
-                      </div>
-                    </div>
-
-                    {idx < 3 && leaderBoard[0]?.score > 0 && (
-                      <div className="mt-3">
-                        <div className="w-full bg-white bg-opacity-30 rounded-full h-2">
-                          <div
-                            className="bg-white h-2 rounded-full"
-                            style={{ width: `${(player.score / leaderBoard[0].score) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
-                  <p className="text-base-content opacity-60">Loading leaderboard...</p>
+          <div className="flex-1 overflow-y-auto">
+            {leaderBoard
+              ?.sort((a, b) => b.score - a.score)
+              .map((item, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between p-2 ${idx === 0 ? "bg-success/100" : idx === 1 ? "bg-success/70" : idx === 2 ? "bg-success/30" : ""
+                    }`}
+                >
+                  <div className="w-10">{idx + 1}</div>
+                  <div className="w-1/3">{item?.username}</div>
+                  <div className="w-1/3 text-center">{item?.role}</div>
+                  <div className="w-1/3 text-end">{item?.score}</div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-base-200 px-6 py-3 flex justify-between items-center text-sm text-base-content opacity-75">
-            <span>Total Players: {leaderBoard.length}</span>
-            <span>Updated: Just now</span>
+              ))}
           </div>
         </div>
       </div>
@@ -242,6 +190,7 @@ const Home = () => {
           </button>
         </div>
 
+        {/* Room list */}
         <div className="flex-1 flex flex-col gap-1 overflow-y-auto">
           {rooms.length > 0 ? (
             <>
@@ -256,7 +205,7 @@ const Home = () => {
                 <div key={idx} className="flex items-center text-xs justify-between p-2">
                   <div className="w-10">{idx + 1}</div>
                   <div className="w-1/4">{item.roomName}</div>
-                  <div className="w-1/4 text-center">{item.players?.length || 0}</div>
+                  <div className="w-1/4 text-center">{item.players.length}</div>
                   <div className="w-1/4 text-end capitalize">{item.phase}</div>
                   <div className="w-1/4 flex items-center gap-1 justify-end">
                     <button className="btn btn-xs btn-soft btn-error" onClick={() => getRoomInfo(item.roomId)}>
@@ -287,7 +236,7 @@ const Home = () => {
             <div className="modal-action">
               <form method="dialog">
                 <button className="btn btn-soft btn-error mr-3">Close</button>
-                <button type="button" className="btn btn-soft btn-success" onClick={createRoom}>
+                <button className="btn btn-soft btn-success" onClick={createRoom}>
                   Create
                 </button>
               </form>
@@ -301,19 +250,28 @@ const Home = () => {
             <h2 className="font-bold text-xl mb-4">Players in Room</h2>
             <div className="grid gap-3">
               {roomInfo.length > 0 ? (
-                roomInfo.map((player, index) => (
-                  <div key={index} className="p-2 rounded bg-base-100 shadow">
-                    <p><strong>Username:</strong> {player.username}</p>
-                    <p><strong>Role:</strong> {player.role}</p>
+                roomInfo.map((player, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-base-200 p-4 rounded-xl shadow">
+                    <div>{player.userId?.username}</div>
+                    <div className="flex gap-2">
+                      <span className={`badge ${player.isAlive ? "badge-success" : "badge-error"}`}>
+                        {player.isAlive ? "Alive" : "Dead"}
+                      </span>
+                      <span className={`badge ${player.isReady ? "badge-info" : "badge-warning"}`}>
+                        {player.isReady ? "Ready" : "Not ready"}
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (
-                <p>No players found.</p>
+                <p>No players in this room.</p>
               )}
             </div>
-            <div className="modal-action">
+            <div className="modal-action mt-5">
               <form method="dialog">
-                <button className="btn">Close</button>
+                <button className="btn" onClick={() => document.getElementById("my_modal_2").close()}>
+                  Close
+                </button>
               </form>
             </div>
           </div>
