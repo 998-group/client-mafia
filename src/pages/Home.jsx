@@ -8,6 +8,7 @@ import { FiMessageCircle } from "react-icons/fi";
 import { MdOutlineLocalGroceryStore } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { toast } from "react-toastify";
+import LeaderBoard from "../components/LeaderBoard";
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
   const [name, setName] = useState("");
@@ -154,80 +155,9 @@ const Home = () => {
       </div>
 
       {/* CENTER PANEL - LEADERBOARD */}
-      <div className="flex-1 h-full min-w-6/12 p-5">
-        <div className="h-full w-full bg-base-100 rounded-xl shadow-2xl overflow-hidden flex flex-col">
-          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white">
-            <div className="flex items-center justify-center gap-4 h-20 px-6">
-              <div className="text-4xl animate-bounce">🏆</div>
-              <div>
-                <h1 className="text-2xl font-bold">Leaderboard</h1>
-                <p className="text-sm opacity-90">Top Players Rankings</p>
-              </div>
-            </div>
-          </div>
+      <div className="w-2/4">
+        <LeaderBoard leaderBoard={leaderBoard} />
 
-          <div className="flex-1 overflow-y-auto p-4">
-            {leaderBoard?.length > 0 ? (
-              <div className="space-y-3">
-                {leaderBoard.map((player, idx) => (
-                  <div
-                    key={idx}
-                    className={`rounded-xl p-4 transition-all duration-300 hover:shadow-lg ${getRankStyling(idx)}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-2xl font-bold min-w-[3rem] text-center">
-                          {getMedal(idx)}
-                        </div>
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
-                          {player?.username?.charAt(0)?.toUpperCase() || "?"}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-lg">
-                            {player?.username || "Unknown"}
-                          </div>
-                          <div className={`text-sm opacity-75 ${idx < 3 ? 'text-white' : 'text-base-content'}`}>
-                            {player?.role || "Player"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">{player?.score || 0}</div>
-                        <div className={`text-xs opacity-75 ${idx < 3 ? 'text-white' : 'text-base-content'}`}>
-                          points
-                        </div>
-                      </div>
-                    </div>
-
-                    {idx < 3 && leaderBoard[0]?.score > 0 && (
-                      <div className="mt-3">
-                        <div className="w-full bg-white bg-opacity-30 rounded-full h-2">
-                          <div
-                            className="bg-white h-2 rounded-full"
-                            style={{ width: `${(player.score / leaderBoard[0].score) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <div className="loading loading-spinner loading-lg text-primary mb-4"></div>
-                  <p className="text-base-content opacity-60">Loading leaderboard...</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-base-200 px-6 py-3 flex justify-between items-center text-sm text-base-content opacity-75">
-            <span>Total Players: {leaderBoard.length}</span>
-            <span>Updated: Just now</span>
-          </div>
-        </div>
       </div>
 
       {/* RIGHT PANEL (ROOMS) */}
