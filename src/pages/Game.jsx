@@ -14,13 +14,12 @@ import DiedPeople from '../components/DiedPeople';
 const Game = () => {
   const { roomId } = useParams();
   const myUserId = useSelector((state) => state.auth?.user?.user?._id);
-
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [players, setPlayers] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [phase, setPhase] = useState("started");
+  const [players, setPlayers] = useState([]);
   const [myRole, setMyRole] = useState(null);
+  const [phase, setPhase] = useState("started");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -62,73 +61,18 @@ const Game = () => {
   }, []);
 
   useEffect(() => {
-    if (!myUserId) return;
-    const handleGamePlayers = (gameRoom) => {
-      const me = gameRoom.players.find(
-        (p) => p.userId?.toString() === myUserId?.toString()
-      );
-      if (!me || !me.gameRole) return;
+    if (!myUserId || !roomId) return;
 
-      const roleData = {
-        role: me.gameRole,
-        img: getRoleImage(me.gameRole),
-        title: getRoleTitle(me.gameRole),
-      };
-      setMyRole(roleData);
+    socket.emit("get_my_role", { userId: myUserId, roomId });
+
+    const handleReceiveRole = (role) => {
+      setMyRole(role);
     };
-    socket.on("game_players", handleGamePlayers);
-    return () => socket.off("game_players", handleGamePlayers);
-  }, [myUserId]);
 
-  const getRoleImage = (role) => {
-    switch (role) {
-      case "mafia":
-        return "https://e1.pxfuel.com/desktop-wallpaper/834/909/desktop-wallpaper-3840x2160-mafia-3-logo-art-games-mafia-3.jpg";
-      case "doctor":
-        return "https://cdn-icons-png.flaticon.com/512/3774/3774299.png";
-      case "detective":
-        return "https://cdn-icons-png.flaticon.com/512/3480/3480795.png";
-      case "peaceful":
-        return "https://cdn-icons-png.flaticon.com/512/1053/1053244.png";
-      default:
-        return "https://cdn-icons-png.flaticon.com/512/565/565547.png";
-    }
-  };
+    socket.on("your_role", handleReceiveRole);
+    return () => socket.off("your_role", handleReceiveRole);
+  }, [myUserId, roomId]);
 
-  const getRoleTitle = (role) => {
-    switch (role) {
-      case "mafia":
-        return "Siz mafiya roligidasiz. Tunda biror odamni o‘ldira olasiz.";
-      case "doctor":
-        return "Siz doctor roligidasiz. Har tunda bir odamni davolay olasiz.";
-      case "detective":
-        return "Siz detective roligidasiz. Kim mafiya ekanini aniqlay olasiz.";
-      case "peaceful":
-        return "Siz oddiy fuqaro. Faqat ovoz berishda qatnashasiz.";
-      default:
-        return "Rol aniqlanmadi.";
-    }
-  };
-
-  const getRoleIcon = (role) => {
-    switch (role) {
-      case "mafia": return <Skull className="w-4 h-4" />;
-      case "doctor": return <Heart className="w-4 h-4" />;
-      case "detective": return <Eye className="w-4 h-4" />;
-      case "peaceful": return <User className="w-4 h-4" />;
-      default: return <AlertCircle className="w-4 h-4" />;
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "mafia": return "text-red-400 border-red-500/30";
-      case "doctor": return "text-green-400 border-green-500/30";
-      case "detective": return "text-blue-400 border-blue-500/30";
-      case "peaceful": return "text-gray-400 border-gray-500/30";
-      default: return "text-gray-400 border-gray-500/30";
-    }
-  };
 
   if (isLoading) {
     return (
@@ -157,12 +101,10 @@ const Game = () => {
         <DiedPeople players={players} myRole={myRole} />
       </div>
 
-      {/* Game Chat */}
       <div className="w-2/4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex flex-col">
         <GameChat />
       </div>
 
-      {/* Right - Timer & Role Card */}
       <div className="w-1/4 flex flex-col gap-4">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl">
           <Timer day={phase} time={timeLeft} />
