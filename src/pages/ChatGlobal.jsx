@@ -7,17 +7,22 @@ const ChatGlobal = () => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
 
+    console.log('message in global', messages)
+    
     const user = useSelector((state) => state?.auth?.user);
 
     const sendMessage = async () => {
-        socket.emit('send_message', { message: input, user: user })
+        socket.emit('send_message', { message: input, user: user}, 
+            (message) => {
+                console.log("message ::", message)
+            }
+        )
 
         setInput('');
     }
 
     useEffect(() => {
         socket.on('receive_message', (message) => {
-            console.log("message", message)
             setMessages(prev => [...prev, message]);
         })
 
@@ -29,7 +34,6 @@ const ChatGlobal = () => {
 
     return (
         <div className="h-full relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800">
-            {/* Animated background effects */}
             <div className="absolute inset-0 opacity-30">
                 <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
                 <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
