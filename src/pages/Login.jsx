@@ -20,8 +20,6 @@ const Login = () => {
 
   };
 
-
-
   const validateForm = () => {
     const newErrors = {};
     if (!formData.username.trim()) newErrors.username = 'Username is required';

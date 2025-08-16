@@ -8,6 +8,9 @@ import { toast } from 'react-toastify';
 import GameEndModal from '../components/GameEndModal';
 import GameStatsModal from '../components/GetGameStats';
 import socket from '../socket';
+import DiedPeople from '../components/DiedPeople';
+import GameChat from '../components/GameChat';
+import Timer from "../components/Timer";
 
 const Game = ({ roomId, myUserId, navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -245,7 +248,7 @@ const Game = ({ roomId, myUserId, navigate }) => {
     <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex gap-4 text-white overflow-hidden">
       {/* Players List */}
       <div className="w-1/4 h-full flex flex-col">
-        <DiedPeople 
+        <DiedPeople
           players={players} 
           myRole={myRole} 
           gamePhase={phase}
