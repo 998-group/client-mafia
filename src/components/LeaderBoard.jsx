@@ -11,6 +11,8 @@ const LeaderBoard = ({ leaderBoard }) => {
     }
   };
 
+  
+
   const getRankStyling = (index) => {
     switch (index) {
       case 0: return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg transform scale-105";
@@ -32,10 +34,13 @@ const LeaderBoard = ({ leaderBoard }) => {
         </div>
       </div>
 
+
       <div className="flex-1 overflow-y-auto p-4">
         {leaderBoard?.length > 0 ? (
           <div className="space-y-3">
-            {leaderBoard.map((player, idx) => (
+            {leaderBoard.map((player, idx) => 
+            (
+             
               <div key={idx} className={`rounded-xl p-4 ${getRankStyling(idx)}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
