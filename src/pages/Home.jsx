@@ -5,8 +5,8 @@ import { FiMessageCircle } from "react-icons/fi";
 import { MdOutlineLocalGroceryStore } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { toast } from "react-toastify";
-import RoomPanel from "../components/RoomPanel";
-import ModernCenterPanel from "../components/CenterPanel";
+import LeaderBoard from "../components/LeaderBoard";
+import RoomPanel from "../components/RoomPanel"
 
 const Home = () => {
   const user = useSelector((state) => state?.auth?.user);
@@ -68,8 +68,10 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-w-[45%]">
-        <ModernCenterPanel />
+      {/* CENTER PANEL - LEADERBOARD */}
+      <div className="w-2/4">
+        <LeaderBoard leaderBoard={leaderBoard} />
+
       </div>
 
       {/* RIGHT PANEL */}

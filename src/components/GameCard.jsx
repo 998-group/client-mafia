@@ -22,6 +22,19 @@ const GameCard = ({ card }) => {
     );
   }
 
+  // Выбор картинки в зависимости от роли
+  const roleImages = {
+    mafia: "/unnamed.png",
+    detective: "/unnamed(1).jpg",
+    doctor: "/unnamed(2).jpg",
+    peaceful: "/unnamed(3).jpg",
+  };
+  
+  let roleImage = roleImages[card.role] || card.img;
+  
+
+  console.log("card", card);
+console.log("roleImage", roleImage);
   return (
     <div className={`p-4 transition-all duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <div
@@ -41,8 +54,8 @@ const GameCard = ({ card }) => {
         <div className="relative mx-auto mb-4">
           <div className="w-24 h-24 rounded-xl overflow-hidden border-4 border-white/20 shadow-md">
             <img
-              src={card.img}
-              alt={card.role}
+              src={roleImage}
+              alt={card?.role}
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.src = "https://cdn-icons-png.flaticon.com/512/565/565547.png";
