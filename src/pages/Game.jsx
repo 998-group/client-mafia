@@ -1,3 +1,4 @@
+// src/pages/Game.jsx - Minimal fixes for your existing code
 import React, { useEffect, useState } from 'react';
 import {
   Users, MessageCircle, Clock, Shield, Sun, Moon,
@@ -11,6 +12,7 @@ import socket from '../socket';
 import DiedPeople from '../components/DiedPeople';
 import GameChat from '../components/GameChat';
 import Timer from "../components/Timer";
+import GameCard from "../components/GameCard";
 
 const Game = ({ roomId, myUserId, navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -41,20 +43,35 @@ const Game = ({ roomId, myUserId, navigate }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Get players and room info
+  // ✅ Get players and room info
   useEffect(() => {
-    socket.emit('get_players', roomId);
-    socket.emit('get_game_status', { roomId });
+    if (roomId && myUserId) {
+      socket.emit('get_game_players', myUserId);
+      socket.emit('get_game_status', { roomId, userId: myUserId });
+    }
     
     const handleUpdatePlayers = (playersFromServer) => {
-      setPlayers(playersFromServer);
+      console.log('👥 Players updated:', playersFromServer);
+      setPlayers(playersFromServer || []);
+      
+      // ✅ Check if I have a role
+      const myPlayer = playersFromServer?.find(p => p.userId === myUserId);
+      if (myPlayer?.gameRole && !myRole) {
+        setMyRole({
+          role: myPlayer.gameRole,
+          title: getRoleDescription(myPlayer.gameRole),
+          img: getRoleImage(myPlayer.gameRole)
+        });
+      }
     };
     
     const handleGameStatus = (statusData) => {
+      console.log('📊 Game status:', statusData);
       setGameRoom(statusData);
       setPhase(statusData.phase);
       setTimeLeft(statusData.timeLeft || 0);
       setIsHost(statusData.hostId === myUserId);
+      setPlayers(statusData.players || []);
       
       if (statusData.phase === "ended") {
         setGameEnded(true);
@@ -67,29 +84,66 @@ const Game = ({ roomId, myUserId, navigate }) => {
       }
     };
 
+    // ✅ Handle role assignment
+    const handleRoleAssigned = (roleData) => {
+      console.log('🎭 Role assigned:', roleData);
+      setMyRole({
+        role: roleData.role,
+        title: roleData.title || getRoleDescription(roleData.role),
+        img: getRoleImage(roleData.role)
+      });
+    };
+
+    // ✅ Handle joined room
+    const handleJoinedRoom = (roomData) => {
+      console.log('📡 Joined room:', roomData);
+      setGameRoom(roomData);
+      setPlayers(roomData.players || []);
+      setPhase(roomData.phase);
+      setIsHost(roomData.hostId === myUserId);
+    };
+
     socket.on('update_players', handleUpdatePlayers);
     socket.on('game_status', handleGameStatus);
+    socket.on('role_assigned', handleRoleAssigned);
+    socket.on('joined_room', handleJoinedRoom);
     
     return () => {
       socket.off('update_players', handleUpdatePlayers);
       socket.off('game_status', handleGameStatus);
+      socket.off('role_assigned', handleRoleAssigned);
+      socket.off('joined_room', handleJoinedRoom);
     };
-  }, [roomId, myUserId]);
+  }, [roomId, myUserId, myRole]);
 
-  // Timer updates
+  // ✅ Timer updates
   useEffect(() => {
     const handleTimerUpdate = ({ timeLeft }) => {
       setTimeLeft(timeLeft);
     };
+    
+    const handleTimerStarted = ({ timeLeft, duration }) => {
+      setTimeLeft(timeLeft ? Math.floor(timeLeft / 1000) : Math.floor(duration / 1000));
+    };
+
     socket.on("timer_update", handleTimerUpdate);
-    return () => socket.off("timer_update", handleTimerUpdate);
+    socket.on("timer_started", handleTimerStarted);
+    
+    return () => {
+      socket.off("timer_update", handleTimerUpdate);
+      socket.off("timer_started", handleTimerStarted);
+    };
   }, []);
 
-  // Phase changes
+  // ✅ Phase changes
   useEffect(() => {
     const handlePhaseChanged = (data) => {
-      setPhase(data.phase);
-      toast.info(`🔄 Phase changed to ${data.phase}`);
+      console.log('🔄 Phase changed:', data);
+      setPhase(data.newPhase || data.phase);
+      if (data.players) {
+        setPlayers(data.players);
+      }
+      toast.info(`🔄 Phase changed to ${data.newPhase || data.phase}`);
     };
 
     const handlePhaseTransition = (data) => {
@@ -105,7 +159,7 @@ const Game = ({ roomId, myUserId, navigate }) => {
     };
   }, []);
 
-  // Game end events
+  // ✅ Game end events
   useEffect(() => {
     const handleGameEnded = (data) => {
       setGameEnded(true);
@@ -122,104 +176,63 @@ const Game = ({ roomId, myUserId, navigate }) => {
         case "save":
           toast.success(`🩺 ${data.message}`);
           break;
-        case "nokill":
-          toast.info(`🌙 ${data.message}`);
-          break;
+        default:
+          toast.info(data.message);
       }
-    };
-
-    const handleVotingResult = (data) => {
-      switch (data.type) {
-        case "lynch":
-          toast.error(`⚰️ ${data.message}`);
-          break;
-        case "tie":
-          toast.warning(`🤝 ${data.message}`);
-          break;
-        case "novotes":
-          toast.info(`🗳️ ${data.message}`);
-          break;
-      }
-    };
-
-    const handleRestartOption = (data) => {
-      toast.info(data.message);
-    };
-
-    const handleGameRestarted = (data) => {
-      setGameEnded(false);
-      setGameEndData(null);
-      setPhase("waiting");
-      toast.success(data.message);
     };
 
     socket.on("game_ended", handleGameEnded);
     socket.on("night_result", handleNightResult);
-    socket.on("voting_result", handleVotingResult);
-    socket.on("restart_option", handleRestartOption);
-    socket.on("game_restarted", handleGameRestarted);
-
+    
     return () => {
       socket.off("game_ended", handleGameEnded);
       socket.off("night_result", handleNightResult);
-      socket.off("voting_result", handleVotingResult);
-      socket.off("restart_option", handleRestartOption);
-      socket.off("game_restarted", handleGameRestarted);
     };
   }, []);
 
-  // Get role
-  useEffect(() => {
-    if (!myUserId || !roomId) return;
-
-    socket.emit("get_my_role", { userId: myUserId, roomId });
-
-    const handleReceiveRole = (role) => {
-      setMyRole(role);
+  // ✅ Helper functions
+  const getRoleDescription = (role) => {
+    const descriptions = {
+      villager: "You are a VILLAGER. Find and eliminate all mafia members.",
+      mafia: "You are a MAFIA member. Kill villagers at night and blend in during the day.",
+      doctor: "You are the DOCTOR. Heal players at night to save them from attacks.",
+      detective: "You are the DETECTIVE. Investigate players at night to discover their roles."
     };
+    return descriptions[role] || "Unknown role";
+  };
 
-    socket.on("your_role", handleReceiveRole);
-    return () => socket.off("your_role", handleReceiveRole);
-  }, [myUserId, roomId]);
+  const getRoleImage = (role) => {
+    const images = {
+      villager: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      mafia: "https://cdn-icons-png.flaticon.com/512/3062/3062634.png",
+      doctor: "https://cdn-icons-png.flaticon.com/512/2785/2785482.png",
+      detective: "https://cdn-icons-png.flaticon.com/512/3110/3110270.png"
+    };
+    return images[role] || "https://cdn-icons-png.flaticon.com/512/565/565547.png";
+  };
 
-  // Host controls
   const handleSkipPhase = () => {
-    socket.emit("skip_phase", { roomId, hostId: myUserId });
-    toast.info("⏭️ Skipping phase...");
+    socket.emit('skip_phase', { roomId });
   };
 
   const handleForceEnd = () => {
-    if (window.confirm("Are you sure you want to end the game?")) {
-      socket.emit("force_game_end", { roomId, hostId: myUserId });
-      toast.warning("🛑 Ending game...");
+    socket.emit('force_end_game', { roomId });
+  };
+
+  const handleShowStats = () => {
+    if (gameEndData) {
+      setGameStats(gameEndData);
+      setShowStats(true);
     }
   };
 
   const handleRestart = () => {
-    if (window.confirm("Are you sure you want to restart the game?")) {
-      socket.emit("restart_game", { roomId, hostId: myUserId });
-      toast.info("🔄 Restarting game...");
-    }
-  };
-
-  const handleShowStats = () => {
-    socket.emit("get_game_stats", { roomId });
-    
-    const handleStatsReceived = (stats) => {
-      setGameStats(stats);
-      setShowStats(true);
-    };
-
-    socket.on("game_statistics", handleStatsReceived);
-    
-    // Cleanup listener after receiving stats
-    setTimeout(() => {
-      socket.off("game_statistics", handleStatsReceived);
-    }, 5000);
+    socket.emit('restart_game', { roomId, hostId: myUserId });
   };
 
   const handleLeaveGame = () => {
-    if (window.confirm("Are you sure you want to leave the game?")) {
+    socket.emit('leave_room', { roomId, userId: myUserId });
+    if (navigate) {
       navigate('/games');
     }
   };
@@ -332,19 +345,7 @@ const Game = ({ roomId, myUserId, navigate }) => {
 
         {/* Role Card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex-1">
-          {myRole ? (
-            <GameCard 
-              card={myRole} 
-              roomId={roomId} 
-              userId={myUserId} 
-              phase={phase}
-              socket={socket}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-yellow-400">⏳ Loading your role...</p>
-            </div>
-          )}
+          <GameCard card={myRole} />
         </div>
       </div>
 
