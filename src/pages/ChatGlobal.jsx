@@ -12,7 +12,7 @@ const ChatGlobal = () => {
     const user = useSelector((state) => state?.auth?.user);
 
     const sendMessage = async () => {
-        socket.emit('send_message', { message: input, user: user}, 
+        socket.emit('send_message', { message: input, user: user, global: true, roomId: null }, 
             (message) => {
                 console.log("message ::", message)
             }
@@ -23,6 +23,7 @@ const ChatGlobal = () => {
 
     useEffect(() => {
         socket.on('receive_message', (message) => {
+            console.log("receive message ::", message)
             setMessages(prev => [...prev, message]);
         })
 

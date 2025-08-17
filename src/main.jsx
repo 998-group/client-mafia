@@ -19,6 +19,8 @@ import Games from './pages/Games.jsx';
 import Game from "./pages/Game.jsx"
 import ChatGlobal from './pages/ChatGlobal.jsx';
 import Profile from './pages/Profile.jsx';
+import Shop from './pages/Shop.jsx';
+import { CoinProvider } from './contexts/CoinContext.jsx';
 
 const router = createBrowserRouter([
   {
@@ -43,7 +45,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/shop",
-            element: <div>shop</div>,
+            element: <Shop/>,
           },
         ]
       },
@@ -74,18 +76,18 @@ const router = createBrowserRouter([
       <PrivateRouter>
         <Game />
       </PrivateRouter>
-
   }
-
 ]);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <RouterProvider router={router} />
-        <ToastContainer position="top-right" autoClose={3000} />
-      </PersistGate>
-    </Provider>
-  </StrictMode>,
-)
+   <Provider store={store}>
+  <PersistGate loading={null} persistor={persistor}>
+    <CoinProvider>
+      <RouterProvider router={router} />
+      <ToastContainer />
+    </CoinProvider>
+  </PersistGate>
+</Provider>
+  </StrictMode>
+);
