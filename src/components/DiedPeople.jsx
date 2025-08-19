@@ -9,14 +9,16 @@ import { IoMdHeartDislike } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
 import {toast } from "react-toastify"
-const DiedPeople = ({ players, myRole }) => {
+const DiedPeople = ({ players, myRole, roomId }) => {
   const user = useSelector((state) => state?.auth?.user);
-  const [room, setRoom] = useState()
+  // const [room, setRoom] = useState()
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [myVoice, setMyVoice] = useState(false);
   const [killPlayer, setKillPlayer] = useState(false)
   const [gamePhase, setGamePhase] = useState()
+  // console.log("room", room);
+
   useEffect(() => {
     setUsers(players);
   }, [players]);
@@ -27,16 +29,15 @@ const DiedPeople = ({ players, myRole }) => {
   useEffect(() => {
     socket.on("your_socket_id", (socketId) => {
       console.log("📡 My socket ID:", socketId);
-      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
     });
   }, []);
   useEffect(() => {
-    socket.on("joined_room", (roomId) => {
-      console.log("📡 My room ID:", roomId);
-      setRoom(roomId)
+    // socket.on("joined_room", (roomId) => {
+    //   console.log("📡 My room ID:", roomId);
+    //   setRoom(roomId.roomId);
 
-      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
-    });
+    //   // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
+    // });
   }, []);
   useEffect(() => {
     socket.on("game_phase", (gamephase) => {
@@ -66,10 +67,10 @@ const DiedPeople = ({ players, myRole }) => {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
     }
-    socket.emit("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id });
+    socket.emit("add_voice", { roomId: roomId, selected: userId, user: user.user?._id });
     setMyVoice(true);
     toast.success("Siz oyinchiga ovoz berdingiz")
-    console.log("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
+    console.log("add_voice", { roomId: roomId, selected: userId, user: user.user?._id })
 
   };
   const handleKill = (selectedPlayerId) => {
@@ -89,17 +90,18 @@ const DiedPeople = ({ players, myRole }) => {
       return;
     }
 
+    console.log("✅ mafia_kill:", {
+      selected: selectedPlayerId,
+      user: user.user._id,
+      roomId: roomId
+    });
     socket.emit("mafia_kill", {
-      roomId: room.roomId,
+      roomId: roomId,
       killerId: user.user._id,
       targetId: selectedPlayerId,
     });
     toast.success("Siz oyinchini otdingiz")
-    console.log("✅ mafia_kill:", {
-      selected: selectedPlayerId,
-      user: user.user._id,
-      roomId: room.roomId
-    });
+
 
     setKillPlayer(true);
   };
@@ -111,13 +113,13 @@ const DiedPeople = ({ players, myRole }) => {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
     }
-    if (!selectedPlayerId || !user?.user?._id || !room?.roomId) {
+    if (!selectedPlayerId || !user?.user?._id || !roomId) {
       toast.error("⚠️ Ma'lumotlar yetarli emas");
       return;
     }
   
     socket.emit("doctor_heal", {
-      roomId: room.roomId,
+      roomId: roomId,
       doctorId: user.user._id,
       targetId: selectedPlayerId
     });
@@ -126,9 +128,9 @@ const DiedPeople = ({ players, myRole }) => {
   };
   
   const handleRemoveVoice = (userId) => {
-    socket.emit("remove_voice", { roomId: room.roomId, userId, user: user.user?._id });
+    socket.emit("remove_voice", { roomId: roomId, userId, user: user.user?._id });
     toast.success("Siz ovozingizni qaytarib oldingiz")
-    console.log("remove_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
+    console.log("remove_voice", { roomId: roomId, selected: userId, user: user.user?._id })
     setMyVoice(false);
   };
 
