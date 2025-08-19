@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { IoIosSend } from 'react-icons/io'
 import socket from '../socket'
 import { useSelector } from 'react-redux'
-import { data } from 'react-router-dom'
+
+
 const ChatGlobal = () => {
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
@@ -14,7 +14,7 @@ const ChatGlobal = () => {
     const sendMessage = async () => {
         socket.emit('send_message', { message: input, user: user, global: true, roomId: null }, 
             (message) => {
-                console.log("message ::", message)
+                console.log("message:", message)
             }
         )
 
@@ -41,7 +41,6 @@ const ChatGlobal = () => {
                 <div className="absolute top-1/2 left-3/4 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
             </div>
 
-            {/* Grid overlay */}
             <div
                 className="absolute inset-0 opacity-20"
                 style={{
@@ -54,30 +53,26 @@ const ChatGlobal = () => {
             ></div>
 
             <div className="relative h-full p-4 flex flex-col gap-2">
-                {/* Messages container */}
                 <div className="flex-1 flex flex-col overflow-y-auto space-y-4 pr-2 custom-scrollbar">
                     {messages.map((message, index) => (
                         <div key={index} className="flex items-start max-w-80 break-words gap-3 group">
-                            {/* Avatar with glow effect */}
                             <div className="relative">
                                 <img
-                                    src={message.sender.avatar}
+                                    src={message.sender.avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
                                     alt="user"
-                                    className="w-10 h-10 rounded-full border-2 border-cyan-400/50 shadow-lg shadow-cyan-400/25 transition-all duration-300 group-hover:border-cyan-400 group-hover:shadow-cyan-400/50"
+                                    className="w-10 h-10 rounded-full border-2 shadow-lg shadow-cyan-400/25 transition-all duration-300 group-hover:border-cyan-400 group-hover:shadow-cyan-400/50"
                                 />
-                                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full opacity-75 blur animate-pulse"></div>
+                                <div className="absolute -inset-1 bg-gradient-to-r  rounded-full opacity-75 blur animate-pulse"></div>
                             </div>
 
-                            {/* Message bubble */}
                             <div className="flex-1 max-w-[70%] key">
                                 <div className="bg-slate-800/70 backdrop-blur-lg border border-slate-600/50 rounded-xl p-4 shadow-lg transition-all duration-300 hover:border-cyan-400/50 hover:shadow-cyan-400/20">
                                     <span className="font-semibold text-xs bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2 block">
                                         {message.sender.username}
                                     </span>
-                                    <p className="text-gray-100 leading-relaxed">{message.text}</p>
+                                    <p className="text-gray-100 leading-relaxed">{message?.text}</p>
                                 </div>
 
-                                {/* Message effects */}
                                 <div className="flex items-center gap-2 mt-2 opacity-60">
                                     <div className="w-1 h-1 bg-cyan-400 rounded-full animate-pulse"></div>
                                     <span className="text-xs text-gray-400">12:3{index + 4}</span>
