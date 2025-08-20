@@ -40,8 +40,7 @@ const GameChat = () => {
             avatar: "https://cdn-icons-png.flaticon.com/512/6858/6858504.png",
             alignment: "end",
             bubbleStyle: "chat-bubble-primary",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+            time: new Date().getHours([])};
 
         socket.emit("send_room_message", { roomId: params.roomId, message: chatMessage });
         setMessage('');
@@ -57,12 +56,11 @@ const GameChat = () => {
 
     return (
         <div className="h-full flex flex-col rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-lg">
-            {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#0f0c29] via-[#302b63] to-[#24243e] rounded-t-2xl">
                 <div className="flex items-center gap-3">
                     <IoArrowBackOutline
                         onClick={handleBack}
-                        className="text-white text-2xl cursor-pointer border border-primary p-1 rounded-full hover:bg-white/10"
+                        className="text-primary text-2xl cursor-pointer border border-primary p-1 rounded-full hover:bg-white/10"
                     />
                     <img
                         src="https://cdn-icons-png.flaticon.com/512/6858/6858504.png"
@@ -73,21 +71,22 @@ const GameChat = () => {
                 </div>
             </div>
 
-            {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 ">
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`chat chat-${msg.alignment} flex min-w-120 `}>
-                        <img src={msg.avatar} alt="Avatar" className="size-12 rounded-full shadow flex mt-8" />
-                        <div className={`${msg.bubbleStyle} chat-bubble  backdrop-blur-md border border-white/20 text-primary-content bg-info `}>
-                            <div className='flex flex-col '>
-                                <span className='text-xs'>{msg.name}</span>
-                                <span className="text-sm break-words">{msg.text}</span>
-                                <span className="text-xs text-right opacity-70 mt-1">{msg.timestamp}</span>
+                        <img src={msg.avatar} alt="Avatar" className="size-12 rounded-full shadow" />
+                        <div className={`${msg.bubbleStyle} chat-bubble backdrop-blur-md border border-white/20 text-primary-content bg-primary/20`}>
+                            <div className='flex flex-col'>
+                                <span className='text-xs text-success font-bold'>{msg.name}</span>
+                                <span className="text-sm break-words text-start font-medium">{msg.text}</span>
+                                <span className='text-xs mt-2 text-end'>{msg.timestamp}</span>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
+
+
 
             <div className="p-4 border-t border-white/10 bg-white/10 backdrop-blur-md rounded-b-2xl flex gap-2">
                 <div className="relative flex-1">
