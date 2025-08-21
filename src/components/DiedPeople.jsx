@@ -8,15 +8,20 @@ import { FaHeartPulse } from "react-icons/fa6";
 import { IoMdHeartDislike } from "react-icons/io";
 import { ImCross } from "react-icons/im";
 import { LuUserRoundSearch } from "react-icons/lu";
-import {toast } from "react-toastify"
-const DiedPeople = ({ players, myRole }) => {
+import { toast } from "react-toastify"
+const DiedPeople = ({ players, myRole, roomId }) => {
   const user = useSelector((state) => state?.auth?.user);
-  const [room, setRoom] = useState()
+  // const [room, setRoom] = useState()
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [myVoice, setMyVoice] = useState(false);
   const [killPlayer, setKillPlayer] = useState(false)
-  const [gamePhase, setGamePhase] = useState()
+  const [gamePhase, setGamePhase] = useState();
+  const [hasDetectiveActed, setHasDetectiveActed] = useState(false);
+  const [hasDoctorActed, setHasDoctorActed] = useState(false);
+  const [hasMafiaActed, setHasMafiaActed] = useState(false);
+  // console.log("room", room);
+
   useEffect(() => {
     setUsers(players);
   }, [players]);
@@ -25,35 +30,82 @@ const DiedPeople = ({ players, myRole }) => {
     socket.emit("get_game_players", user?._id);
   }, []);
   useEffect(() => {
+    socket.on("error_message", (errorMsg) => {
+      console.log("❌ Server error:", errorMsg);
+      toast.error(errorMsg.message);
+    });
+
+    return () => {
+      socket.off("error");
+    };
+  }, []);
+
+
+  useEffect(() => {
+    socket.on("check_result", ({ targetUsername, role }) => {
+      toast.info(`🕵️ ${targetUsername} roli: ${role}`);
+    });
+
+    return () => {
+      socket.off("check_result");
+    };
+  }, []);
+  useEffect(() => {
+    socket.on("doctor_heal_confirmed", ({targetId,targetUsername }) => {
+      toast.info(`${targetUsername}`)
+    })
+  }, [])
+
+  useEffect(() => {
     socket.on("your_socket_id", (socketId) => {
       console.log("📡 My socket ID:", socketId);
-      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
     });
   }, []);
   useEffect(() => {
-    socket.on("joined_room", (roomId) => {
-      console.log("📡 My room ID:", roomId);
-      setRoom(roomId)
+    // socket.on("joined_room", (roomId) => {
+    //   console.log("📡 My room ID:", roomId);
+    //   setRoom(roomId.roomId);
 
-      // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
-    });
+    //   // kerak bo‘lsa Redux, context, yoki local state-ga saqlashingiz mumkin
+    // });
   }, []);
   useEffect(() => {
     socket.on("game_phase", (gamephase) => {
       console.log("game_phase:", gamephase.phase);
       setGamePhase(gamephase.phase)
+      if (gamephase.phase === "night") {
+        setHasDetectiveActed(false);
+        setHasDoctorActed(false);   // ✅ doctor reset
+        setHasMafiaActed(false);
+      }
     });
   }, []);
   useEffect(() => {
     socket.on("error_message", (errorMsg) => {
-      console.log( errorMsg);
+      console.log(errorMsg);
       toast.error(errorMsg);
     });
-  
+
     return () => {
       socket.off("error_message");
     };
   }, []);
+  useEffect(() => {
+    socket.on("player_saved", ({ username }) => {
+      toast.success(`🛡️ ${username} doctor tomonidan qutqarildi!`);
+    });
+
+    socket.on("player_killed", ({ username }) => {
+      toast.error(`☠️ ${username} ertalab o‘lik holda topildi!`);
+    });
+
+    return () => {
+      socket.off("player_saved");
+      socket.off("player_killed");
+    };
+  }, []);
+
+
 
 
 
@@ -66,13 +118,52 @@ const DiedPeople = ({ players, myRole }) => {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
     }
-    socket.emit("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id });
+    socket.emit("add_voice", { roomId: roomId, selected: userId, user: user.user?._id });
     setMyVoice(true);
     toast.success("Siz oyinchiga ovoz berdingiz")
-    console.log("add_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
+    console.log("add_voice", { roomId: roomId, selected: userId, user: user.user?._id })
 
   };
+
+  const handleCheck = (selectedPlayerId) => {
+    // if (hasDetectiveActed) {
+    //   toast.error("Siz tunda faqat bir marotaba tekshira olasiz");
+    //   return;
+    // }
+    if (gamePhase !== "night") { // 👈 boshlanish shartini ham tuzatdim
+      toast.error("⛔ Hali tun bosqichi emas");
+      return;
+    }
+
+    if (!selectedPlayerId) {
+      console.warn("❗ selectedPlayerId yo‘q");
+      return;
+    }
+    if (!user?.user?._id) {
+      console.warn("❗ Foydalanuvchi ID yo‘q (user.user._id)");
+      return;
+    }
+
+    console.log("✅ check_player:", {
+      roomId,
+      checkerId: user.user._id,
+      targetUserId: selectedPlayerId,
+    });
+
+    setHasDetectiveActed(true);
+    socket.emit("check_player", {
+      roomId,
+      checkerId: user.user._id,
+      targetUserId: selectedPlayerId,
+    });
+
+  };
+
   const handleKill = (selectedPlayerId) => {
+    if (hasMafiaActed) {
+      toast.error("❌ Siz tunda faqat bir marta o‘q uzishingiz mumkin!");
+      return;
+    }
     if (gamePhase === "started") {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
@@ -89,46 +180,53 @@ const DiedPeople = ({ players, myRole }) => {
       return;
     }
 
-    socket.emit("mafia_kill", {
-      roomId: room.roomId,
-      killerId: user.user._id,
-      targetId: selectedPlayerId,
-    });
-    toast.success("Siz oyinchini otdingiz")
     console.log("✅ mafia_kill:", {
       selected: selectedPlayerId,
       user: user.user._id,
-      roomId: room.roomId
+      roomId: roomId
     });
+    socket.emit("mafia_kill", {
+      roomId: roomId,
+      killerId: user.user._id,
+      targetId: selectedPlayerId,
+    });
+    setHasMafiaActed(true);
+    toast.success("Siz oyinchini otdingiz")
+
 
     setKillPlayer(true);
   };
 
   const handleHeal = (selectedPlayerId) => {
+    // if (hasDoctorActed) {
+    //   toast.error("❌ Siz tunda faqat bir marta davolashingiz mumkin!");
+    //   return;
+    // }
     console.log("🩺 handleHeal:", selectedPlayerId);
-  
+
     if (gamePhase === "started") {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
     }
-    if (!selectedPlayerId || !user?.user?._id || !room?.roomId) {
+    if (!selectedPlayerId || !user?.user?._id || !roomId) {
       toast.error("⚠️ Ma'lumotlar yetarli emas");
       return;
     }
-  
+
     socket.emit("doctor_heal", {
-      roomId: room.roomId,
+      roomId: roomId,
       doctorId: user.user._id,
       targetId: selectedPlayerId
     });
-  
+    setHasDoctorActed(true);
+
     toast.success("🩺 Siz bemorni davoladingiz");
   };
-  
+
   const handleRemoveVoice = (userId) => {
-    socket.emit("remove_voice", { roomId: room.roomId, userId, user: user.user?._id });
+    socket.emit("remove_voice", { roomId: roomId, userId, user: user.user?._id });
     toast.success("Siz ovozingizni qaytarib oldingiz")
-    console.log("remove_voice", { roomId: room.roomId, selected: userId, user: user.user?._id })
+    console.log("remove_voice", { roomId: roomId, selected: userId, user: user.user?._id })
     setMyVoice(false);
   };
 
@@ -182,6 +280,7 @@ const DiedPeople = ({ players, myRole }) => {
                     {/* 🔍 Detective */}
                     <button
                       disabled={myRole?.role !== "detective"}
+                      onClick={() => handleCheck(u.userId)}
                       className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "detective" ? "btn-disabled" : "btn-warning"}`}
                       data-tip="Detect"
                     >

@@ -44,21 +44,45 @@ const Game = () => {
     return () => socket.off('update_players', handleUpdatePlayers);
   }, [roomId]);
 
-  useEffect(() => {
-    const handleTimerUpdate = ({ timeLeft }) => {
-      setTimeLeft(timeLeft);
-    };
-    socket.on("timer_update", handleTimerUpdate);
-    return () => socket.off("timer_update", handleTimerUpdate);
-  }, [roomId]);
 
   useEffect(() => {
+    // Socket event listeners
+    const handleTimerUpdate = ({ timeLeft }) => {
+      setTimeLeft(timeLeft || 0);
+    };
+
     const handleGamePhase = (gameRoomData) => {
       setPhase(gameRoomData.phase);
+      setPlayers(gameRoomData.players || []);
     };
+
+    const handleUpdatePlayers = (playersFromServer) => {
+      setPlayers(playersFromServer || []);
+    };
+
+    const handleGameStatus = ({ timeLeft, phase, players }) => {
+      setTimeLeft(timeLeft || 0);
+      setPhase(phase);
+      setPlayers(players || []);
+    };
+
+    // Register all listeners
+    socket.on("timer_update", handleTimerUpdate);
     socket.on("game_phase", handleGamePhase);
-    return () => socket.off("game_phase", handleGamePhase);
-  }, []);
+    socket.on("update_players", handleUpdatePlayers);
+    socket.on("game_status", handleGameStatus);
+
+    // Initial game state request
+    socket.emit('get_game_status', { roomId, userId: myUserId });
+
+    // Cleanup
+    return () => {
+      socket.off("timer_update", handleTimerUpdate);
+      socket.off("game_phase", handleGamePhase);
+      socket.off("update_players", handleUpdatePlayers);
+      socket.off("game_status", handleGameStatus);
+    };
+  }, [roomId, myUserId]);
 
   useEffect(() => {
     if (!myUserId || !roomId) return;
@@ -98,7 +122,7 @@ const Game = () => {
     <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex gap-4 text-white overflow-hidden">
       {/* Players List */}
       <div className="w-1/4 h-full flex flex-col">
-        <DiedPeople players={players} myRole={myRole} />
+        <DiedPeople players={players} myRole={myRole} roomId={roomId} />
       </div>
 
       <div className="w-2/4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex flex-col">
