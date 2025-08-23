@@ -118,10 +118,10 @@ const DiedPeople = ({ players, myRole, roomId }) => {
       toast.error("⛔ Hali o‘yin boshlanmadi");
       return;
     }
-    socket.emit("add_voice", { roomId: roomId, selected: userId, user: user.user?._id });
+    socket.emit("vote_player", { roomId: roomId, selected: userId, user: user.user?._id });
     setMyVoice(true);
     toast.success("Siz oyinchiga ovoz berdingiz")
-    console.log("add_voice", { roomId: roomId, selected: userId, user: user.user?._id })
+    console.log("vote_player", { roomId: roomId, selected: userId, user: user.user?._id })
 
   };
 

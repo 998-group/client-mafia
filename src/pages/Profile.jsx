@@ -1,32 +1,66 @@
 import { useSelector } from 'react-redux';
 
 const Profile = () => {
-
     const user = useSelector((state) => state);
     console.log("users profile: ", user);
 
     return (
-        <div className='flex flex-col gap-2 m-4'>
-            <div className='bg-base-300 w-full rounded-2xl p-3 '>
-                <div className='flex flex-col items-center justify-center gap-4'>
-                    <div>
-                        <img src={user?.auth?.user?.user?.image} alt="profile" className='w-20 h-20 border-3 border-warning rounded-full' />
+        <div className='flex flex-col gap-6 m-4 max-w-md mx-auto'>
+            {/* Profile Header Card */}
+            <div className='bg-gradient-to-br from-primary/10 to-secondary/10 backdrop-blur-sm border border-primary/20 w-full rounded-3xl p-4 shadow-xl'>
+                <div className='flex flex-col items-center justify-center gap-6'>
+                    <div className='relative'>
+                        <img 
+                            src={user?.auth?.user?.user?.image} 
+                            alt="profile" 
+                            className='w-24 h-24 border-4 border-primary rounded-full shadow-lg ring-4 ring-primary/20 object-cover' 
+                        />
+                        <div className='absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-base-100'></div>
                     </div>
-                    <div>
-                        <p className='text-2xl font-bold'>{user?.auth?.user?.user?.username}</p>
+                    <div className='text-center'>
+                        <p className='text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent'>
+                            {user?.auth?.user?.user?.username}
+                        </p>
+                        <p className='text-sm text-base-content/70 mt-1'>Welcome back!</p>
                     </div>
                 </div>
             </div>
-            <div className='bg-base-300 w-full rounded-2xl p-3 '>
 
-                <div className='bg-base-200 border-success w-full rounded-2xl p-1'>
-                    <p className='text-center text-xl font-extrabold text-warning'>Main information</p>
+            {/* Information Card */}
+            <div className='bg-base-200/80 backdrop-blur-sm border border-base-300 w-full rounded-3xl p-6 shadow-lg'>
+                <div className='bg-gradient-to-r from-accent/20 to-secondary/20 border border-accent/30 w-full rounded-2xl p-4 mb-6'>
+                    <p className='text-center text-xl font-bold bg-gradient-to-r from-accent to-secondary bg-clip-text text-transparent'>
+                        Main Information
+                    </p>
                 </div>
+                
+                <div className='bg-base-100/80 backdrop-blur-sm border border-base-300/50 rounded-2xl p-6 flex flex-col gap-6 shadow-inner'>
+                    {/* User ID */}
+                    <div className='flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-info/10 to-info/5 border border-info/20'>
+                        <span className='text-lg font-semibold text-info'>ID:</span>
+                        <span className='text-sm font-mono text-warning px-3 py-1 rounded-lg '>
+                            {user?.auth?.user?.user?._id}
+                        </span>
+                    </div>
 
-                <div className='bg-base-200 mt-4 rounded-2xl p-3 flex flex-col gap-2 '>
-                    <p className='text-xl font-bold gap-3 text-warning'>User id: <span className='text-xs relative left-2 text-base-content font-medium'>{user?.auth?.user?.user?._id}</span></p>
-                    <p className='text-xl font-bold gap-3 text-warning'>Role: <span className='text-xl relative left-2 text-base-content'>{user?.auth?.user?.user?.role}</span></p>
-                    <p className='text-xl font-bold gap-3 text-warning' >Status: <span className='text-xs p-2 bg-success  relative left-2 text-base-content  rounded-2xl'>{user?.auth?.user?.user?.satus || "Online"}</span></p>
+                    {/* Role */}
+                    <div className='flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-warning/10 to-warning/5 border border-warning/20'>
+                        <span className='text-lg font-semibold text-warning'>Role:</span>
+                        <span className='text-lg font-bold text-warning bg-warning/20 px-4 py-1 rounded-lg border border-warning/30'>
+                            {user?.auth?.user?.user?.role}
+                        </span>
+                    </div>
+
+                    {/* Status */}
+                    <div className='flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-success/10 to-success/5 border border-success/20'>
+                        <span className='text-lg font-semibold text-success'>Status:</span>
+                        <div className='flex items-center gap-2'>
+                            <div className='w-2 h-2 bg-success rounded-full animate-pulse'></div>
+                            <span className='text-sm font-medium bg-success text-success-content px-4 py-2 rounded-full shadow-sm'>
+                                {user?.auth?.user?.user?.satus || "Online"}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
