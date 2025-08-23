@@ -41,7 +41,6 @@ const GameChat = () => {
             alignment: "end",
             bubbleStyle: "chat-bubble-primary",
             time: new Date().getHours([])};
-
         socket.emit("send_room_message", { roomId: params.roomId, message: chatMessage });
         setMessage('');
     };
@@ -79,7 +78,7 @@ const GameChat = () => {
                             <div className='flex flex-col'>
                                 <span className='text-xs text-success font-bold'>{msg.name}</span>
                                 <span className="text-sm break-words text-start font-medium">{msg.text}</span>
-                                <span className='text-xs mt-2 text-end'>{msg.timestamp}</span>
+                                {/* <span className='text-xs mt-2 text-end'>{msg.timestamp}</span> */}
                             </div>
                         </div>
                     </div>
