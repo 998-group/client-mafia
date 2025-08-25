@@ -96,6 +96,7 @@ const DiedPeople = ({ players, myRole, roomId }) => {
     });
 
     socket.on("player_killed", ({ username }) => {
+      console.log("player_killed", username);
       toast.error(`☠️ ${username} ertalab o‘lik holda topildi!`);
     });
 
