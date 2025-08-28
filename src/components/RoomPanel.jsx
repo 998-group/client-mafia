@@ -26,6 +26,7 @@ const RoomPanel = () => {
     }, []);
 
     const handleJoinedRoom = useCallback((room) => {
+        console.log("room created",room)
         if (room?.roomId) {
             setIsJoining(false);
             setJoiningRoomId(null);

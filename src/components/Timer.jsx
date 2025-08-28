@@ -1,6 +1,9 @@
-// src/components/Timer.jsx - ENHANCED WITH FULL TIMER INTEGRATION
-import React, { useState, useEffect } from 'react';
-import { Clock, Sun, Moon, AlertCircle, Skull, Play, Pause } from 'lucide-react';
+// 🚨 FIXED Timer Component with Proper Socket Integration
+// src/components/Timer.jsx
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Clock, Sun, Moon, AlertCircle, Skull, Play, Pause, Settings } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import socket from '../socket';
 
 const Timer = ({ roomId, day, time, isHost = false }) => {
@@ -8,81 +11,166 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
   const [currentPhase, setCurrentPhase] = useState(day || "waiting");
   const [isActive, setIsActive] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   
+  // Get user info from Redux
+  const user = useSelector((state) => state.auth?.user);
+  const userId = user?._id || user?.user?._id;
+
+  // Track socket connection status
+  useEffect(() => {
+    const checkConnection = () => {
+      setIsConnected(socket?.connected || false);
+    };
+
+    checkConnection();
+    
+    if (socket) {
+      socket.on('connect', checkConnection);
+      socket.on('disconnect', checkConnection);
+    }
+
+    return () => {
+      if (socket) {
+        socket.off('connect', checkConnection);
+        socket.off('disconnect', checkConnection);
+      }
+    };
+  }, []);
+
   // Update time from props
   useEffect(() => {
-    if (typeof time === 'number') {
+    if (typeof time === 'number' && time !== currentTime) {
+      console.log(`⏰ Timer props updated: ${time}s`);
       setCurrentTime(time);
       setIsActive(time > 0);
     }
-  }, [time]);
+  }, [time, currentTime]);
 
   // Update phase from props
   useEffect(() => {
-    if (day) {
+    if (day && day !== currentPhase) {
+      console.log(`🎮 Phase props updated: ${day}`);
       setCurrentPhase(day);
     }
-  }, [day]);
+  }, [day, currentPhase]);
 
-  // Socket event listeners for timer updates
-  useEffect(() => {
-    if (!socket || !roomId) return;
+  // Socket event handlers
+  const handleTimerUpdate = useCallback(({ timeLeft, phase, roomId: updateRoomId }) => {
+    // Only update if it's for our room
+    if (updateRoomId && updateRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`⏰ Timer update received: ${timeLeft}s, phase: ${phase}`);
+    setCurrentTime(timeLeft);
+    if (phase) setCurrentPhase(phase);
+    setIsActive(timeLeft > 0);
+  }, [roomId]);
 
-    const handleTimerUpdate = ({ timeLeft, phase }) => {
-      console.log(`⏰ Timer update: ${timeLeft}s, phase: ${phase}`);
+  const handleTimerEnd = useCallback(({ roomId: endRoomId }) => {
+    if (endRoomId && endRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`⏰ Timer ended for room ${roomId}`);
+    setCurrentTime(0);
+    setIsActive(false);
+  }, [roomId]);
+
+  const handleTimerStarted = useCallback(({ roomId: timerRoomId, duration }) => {
+    if (timerRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`⏰ Timer started: ${duration}s`);
+    setCurrentTime(duration);
+    setIsActive(true);
+  }, [roomId]);
+
+  const handleTimerCleared = useCallback(({ roomId: clearedRoomId }) => {
+    if (clearedRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`⏰ Timer cleared for room ${roomId}`);
+    setCurrentTime(0);
+    setIsActive(false);
+  }, [roomId]);
+
+  const handleTimerStatus = useCallback(({ roomId: statusRoomId, timeLeft, hasTimer }) => {
+    if (statusRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`🔍 Timer status received: ${timeLeft}s, hasTimer: ${hasTimer}`);
+    if (hasTimer && timeLeft !== null) {
       setCurrentTime(timeLeft);
-      if (phase) setCurrentPhase(phase);
       setIsActive(timeLeft > 0);
-    };
-
-    const handleTimerEnd = () => {
-      console.log(`⏰ Timer ended for room ${roomId}`);
+    } else {
       setCurrentTime(0);
       setIsActive(false);
-    };
+    }
+  }, [roomId]);
 
-    const handleTimerStarted = ({ roomId: timerRoomId, duration }) => {
-      if (timerRoomId === roomId) {
-        console.log(`⏰ Timer started: ${duration}s`);
-        setCurrentTime(duration);
-        setIsActive(true);
-      }
-    };
+  const handleGamePhase = useCallback(({ phase, roomId: phaseRoomId }) => {
+    if (phaseRoomId && phaseRoomId !== roomId) {
+      return;
+    }
+    
+    console.log(`🎮 Phase changed: ${phase}`);
+    setCurrentPhase(phase);
+  }, [roomId]);
 
-    const handleTimerCleared = ({ roomId: clearedRoomId }) => {
-      if (clearedRoomId === roomId) {
-        console.log(`⏰ Timer cleared for room ${roomId}`);
-        setCurrentTime(0);
-        setIsActive(false);
-      }
-    };
+  const handleError = useCallback((error) => {
+    console.error(`❌ Timer error:`, error);
+    // You might want to show a toast notification here
+  }, []);
 
-    const handleGamePhase = ({ phase, roomId: phaseRoomId }) => {
-      if (!phaseRoomId || phaseRoomId === roomId) {
-        console.log(`🎮 Phase changed: ${phase}`);
-        setCurrentPhase(phase);
-      }
-    };
+  // Socket event listeners setup
+  useEffect(() => {
+    if (!socket || !roomId || !isConnected) {
+      console.log(`⚠️ Timer setup skipped: socket=${!!socket}, roomId=${roomId}, connected=${isConnected}`);
+      return;
+    }
 
-    // Register event listeners
+    console.log(`🔌 Setting up timer socket listeners for room ${roomId}`);
+
+    // Register event listeners with proper callbacks
     socket.on("timer_update", handleTimerUpdate);
     socket.on("timer_end", handleTimerEnd);
     socket.on("timer_started", handleTimerStarted);
     socket.on("timer_cleared", handleTimerCleared);
+    socket.on("timer_status", handleTimerStatus);
     socket.on("game_phase", handleGamePhase);
+    socket.on("error", handleError);
 
     // Request current timer status
+    console.log(`🔍 Requesting timer status for room ${roomId}`);
     socket.emit("get_timer_status", { roomId });
 
-    // Cleanup
+    // Cleanup function
     return () => {
+      console.log(`🧹 Cleaning up timer listeners for room ${roomId}`);
       socket.off("timer_update", handleTimerUpdate);
       socket.off("timer_end", handleTimerEnd);
       socket.off("timer_started", handleTimerStarted);
       socket.off("timer_cleared", handleTimerCleared);
+      socket.off("timer_status", handleTimerStatus);
       socket.off("game_phase", handleGamePhase);
+      socket.off("error", handleError);
     };
-  }, [roomId]);
+  }, [
+    roomId, 
+    isConnected,
+    handleTimerUpdate,
+    handleTimerEnd,
+    handleTimerStarted,
+    handleTimerCleared,
+    handleTimerStatus,
+    handleGamePhase,
+    handleError
+  ]);
 
   // Format countdown display
   const formatCountdown = (totalSeconds) => {
@@ -156,21 +244,27 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
 
   // Timer control functions (host only)
   const handleStartTimer = (duration = 60) => {
-    if (!isHost || !roomId) return;
+    if (!isHost || !roomId || !userId || !isConnected) {
+      console.warn(`❌ Cannot start timer: isHost=${isHost}, roomId=${roomId}, userId=${userId}, connected=${isConnected}`);
+      return;
+    }
     
-    console.log(`⏰ Host starting timer: ${duration}s`);
+    console.log(`⏰ Host starting timer: ${duration}s for room ${roomId}`);
     socket.emit("start_timer", { 
       roomId, 
       duration, 
-      hostId: socket.userId // Assume this is set when user connects
+      hostId: userId // ✅ Fixed: Use proper userId from Redux
     });
   };
 
   const handleClearTimer = () => {
-    if (!isHost || !roomId) return;
+    if (!isHost || !roomId || !userId || !isConnected) {
+      console.warn(`❌ Cannot clear timer: isHost=${isHost}, roomId=${roomId}, userId=${userId}, connected=${isConnected}`);
+      return;
+    }
     
-    console.log(`⏰ Host clearing timer`);
-    socket.emit("clear_timer", { roomId });
+    console.log(`⏰ Host clearing timer for room ${roomId}`);
+    socket.emit("clear_timer", { roomId, adminId: userId });
   };
 
   // Get urgency level for styling
@@ -224,8 +318,11 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
               className="ml-2 p-1 rounded hover:bg-white/10 transition-colors"
               title="Timer Controls (Host)"
             >
-              <AlertCircle className="w-4 h-4 text-yellow-400" />
+              <Settings className="w-4 h-4 text-yellow-400" />
             </button>
+          )}
+          {!isConnected && (
+            <AlertCircle className="w-4 h-4 text-red-400" title="Disconnected" />
           )}
         </div>
 
@@ -247,51 +344,76 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
           </div>
         )}
 
+        {/* Connection Status */}
+        {!isConnected && (
+          <div className="text-xs text-red-400">
+            🔌 Disconnected - Timer may not be accurate
+          </div>
+        )}
+
         {/* Host Controls */}
         {isHost && showControls && (
           <div className="mt-4 p-3 bg-black/30 rounded-lg space-y-2">
-            <div className="text-xs text-gray-400 mb-2">Host Controls</div>
-            <div className="flex gap-2 justify-center">
+            <div className="text-xs text-gray-400 mb-2">Host Timer Controls</div>
+            <div className="flex gap-2 justify-center flex-wrap">
               <button
                 onClick={() => handleStartTimer(30)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs"
-                disabled={isActive}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
+                disabled={isActive || !isConnected}
+                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 30 second timer"}
               >
                 30s
               </button>
               <button
                 onClick={() => handleStartTimer(60)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs"
-                disabled={isActive}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
+                disabled={isActive || !isConnected}
+                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 1 minute timer"}
               >
                 1min
               </button>
               <button
                 onClick={() => handleStartTimer(180)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs"
-                disabled={isActive}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
+                disabled={isActive || !isConnected}
+                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 3 minute timer"}
               >
                 3min
               </button>
               <button
                 onClick={handleClearTimer}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs"
-                disabled={!isActive}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded text-xs transition-colors"
+                disabled={!isActive || !isConnected}
+                title={!isConnected ? "Disconnected" : !isActive ? "No timer running" : "Stop timer"}
               >
                 Stop
               </button>
             </div>
+            {!isConnected && (
+              <div className="text-xs text-red-400 mt-2">
+                ⚠️ Cannot control timer while disconnected
+              </div>
+            )}
           </div>
         )}
 
         {/* Debug Info (Development only) */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-2 bg-black/20 rounded text-xs text-gray-500">
+          <div className="mt-4 p-2 bg-black/20 rounded text-xs text-gray-500 space-y-1">
             <div>Room: {roomId}</div>
             <div>Phase: {currentPhase}</div>
             <div>Time: {currentTime}s</div>
             <div>Active: {isActive ? 'Yes' : 'No'}</div>
             <div>Host: {isHost ? 'Yes' : 'No'}</div>
+            <div>Connected: {isConnected ? 'Yes' : 'No'}</div>
+            <div>UserId: {userId || 'Not available'}</div>
+            <button
+              onClick={() => socket?.emit("get_timer_status", { roomId })}
+              className="mt-1 px-2 py-1 bg-blue-500 text-white rounded text-xs"
+              disabled={!isConnected}
+            >
+              Refresh Status
+            </button>
           </div>
         )}
       </div>
