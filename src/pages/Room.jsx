@@ -185,7 +185,7 @@ const Room = () => {
       toast.warning('Cannot change ready status - game is not in waiting phase');
       return;
     }
-
+    console.log("Ready", { roomId, userId: user._id})
     socket.emit('ready', { roomId, userId: user._id });
   };
 
