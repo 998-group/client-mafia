@@ -5,6 +5,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import socket from '../socket';
+import { toast } from 'react-toastify';
 
 const GameChat = () => {
     const [message, setMessage] = useState('');
@@ -12,7 +13,9 @@ const GameChat = () => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     const user = useSelector((state) => state?.auth?.user);
+    console.log("USER", user)
     const params = useParams();
+    const roomId = params.roomId
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -50,6 +53,11 @@ const GameChat = () => {
     };
 
     const handleBack = () => {
+        if(!user?.user?._id || !roomId) {
+            toast.error('Missing user or room information');
+            return
+        } 
+        socket.emit('leave_room', {roomId, userId: user.user._id})
         navigate('/');
     };
 
