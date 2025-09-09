@@ -1,416 +1,227 @@
-// 🚨 FIXED Timer Component with Proper Socket Integration
 // src/components/Timer.jsx
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Clock, Sun, Moon, AlertCircle, Skull, Play, Settings } from "lucide-react";
+import { useSelector } from "react-redux";
+import socket from "../socket";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Sun, Moon, AlertCircle, Skull, Play, Pause, Settings } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import socket from '../socket';
+// 30s default
+const PHASE_DURATION = 30_000;
 
 const Timer = ({ roomId, day, time, isHost = false }) => {
-  const [currentTime, setCurrentTime] = useState(time || 0);
-  const [currentPhase, setCurrentPhase] = useState(day || "waiting");
-  const [isActive, setIsActive] = useState(false);
-  const [showControls, setShowControls] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  
-  // Get user info from Redux
-  const user = useSelector((state) => state.auth?.user);
+  const user = useSelector((s) => s.auth?.user);
   const userId = user?._id || user?.user?._id;
 
-  // Track socket connection status
+  const [phase, setPhase] = useState(day || "waiting");
+  const [connected, setConnected] = useState(socket?.connected ?? false);
+
+  // deadline = timestamp (ms) when phase should end
+  const [deadline, setDeadline] = useState(null);
+  const rafRef = useRef(null);
+  const lastPhaseRef = useRef(phase);
+
+  // ===== Helpers =====
+  const startPhaseCountdown = useCallback((ms = PHASE_DURATION) => {
+    setDeadline(Date.now() + ms);
+  }, []);
+
+  const clearCountdown = useCallback(() => {
+    setDeadline(null);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const getTimeLeft = useCallback(() => {
+    if (!deadline) return 0;
+    return Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+  }, [deadline]);
+
+  const isActive = useMemo(() => getTimeLeft() > 0, [getTimeLeft]);
+
+  // ===== Socket connection status =====
   useEffect(() => {
-    const checkConnection = () => {
-      setIsConnected(socket?.connected || false);
-    };
-
-    checkConnection();
-    
-    if (socket) {
-      socket.on('connect', checkConnection);
-      socket.on('disconnect', checkConnection);
-    }
-
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+    socket?.on("connect", onConnect);
+    socket?.on("disconnect", onDisconnect);
     return () => {
-      if (socket) {
-        socket.off('connect', checkConnection);
-        socket.off('disconnect', checkConnection);
-      }
+      socket?.off("connect", onConnect);
+      socket?.off("disconnect", onDisconnect);
     };
   }, []);
 
-  // Update time from props
+  // ===== Phase from props (SSR/hydration or parent control) =====
   useEffect(() => {
-    if (typeof time === 'number' && time !== currentTime) {
-      console.log(`⏰ Timer props updated: ${time}s`);
-      setCurrentTime(time);
-      setIsActive(time > 0);
+    if (!day) return;
+    if (day !== lastPhaseRef.current) {
+      setPhase(day);
+      startPhaseCountdown(); // always restart 30s when prop-phase changes
+      lastPhaseRef.current = day;
     }
-  }, [time, currentTime]);
+  }, [day, startPhaseCountdown]);
 
-  // Update phase from props
+  // ===== Socket listeners =====
+  const onGamePhase = useCallback(
+    ({ phase: newPhase, roomId: phaseRoomId }) => {
+      if (phaseRoomId && phaseRoomId !== roomId) return;
+      setPhase((prev) => {
+        lastPhaseRef.current = newPhase;
+        return newPhase || prev;
+      });
+      startPhaseCountdown(); // restart 30s on every phase change
+    },
+    [roomId, startPhaseCountdown]
+  );
+
+  // Optional server timer syncs (kept for future use)
+  const onTimerStatus = useCallback(
+    ({ roomId: statusRoomId, timeLeft, hasTimer }) => {
+      if (statusRoomId !== roomId) return;
+      if (hasTimer && typeof timeLeft === "number") {
+        setDeadline(Date.now() + timeLeft * 1000);
+      }
+    },
+    [roomId]
+  );
+
   useEffect(() => {
-    if (day && day !== currentPhase) {
-      console.log(`🎮 Phase props updated: ${day}`);
-      setCurrentPhase(day);
-    }
-  }, [day, currentPhase]);
+    if (!socket || !roomId) return;
+    socket.on("game_phase", onGamePhase);
+    socket.on("timer_status", onTimerStatus);
 
-  // Socket event handlers
-  const handleTimerUpdate = useCallback(({ timeLeft, phase, roomId: updateRoomId }) => {
-    // Only update if it's for our room
-    if (updateRoomId && updateRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`⏰ Timer update received: ${timeLeft}s, phase: ${phase}`);
-    setCurrentTime(timeLeft);
-    if (phase) setCurrentPhase(phase);
-    setIsActive(timeLeft > 0);
-  }, [roomId]);
-
-  const handleTimerEnd = useCallback(({ roomId: endRoomId }) => {
-    if (endRoomId && endRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`⏰ Timer ended for room ${roomId}`);
-    setCurrentTime(0);
-    setIsActive(false);
-  }, [roomId]);
-
-  const handleTimerStarted = useCallback(({ roomId: timerRoomId, duration }) => {
-    if (timerRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`⏰ Timer started: ${duration}s`);
-    setCurrentTime(duration);
-    setIsActive(true);
-  }, [roomId]);
-
-  const handleTimerCleared = useCallback(({ roomId: clearedRoomId }) => {
-    if (clearedRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`⏰ Timer cleared for room ${roomId}`);
-    setCurrentTime(0);
-    setIsActive(false);
-  }, [roomId]);
-
-  const handleTimerStatus = useCallback(({ roomId: statusRoomId, timeLeft, hasTimer }) => {
-    if (statusRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`🔍 Timer status received: ${timeLeft}s, hasTimer: ${hasTimer}`);
-    if (hasTimer && timeLeft !== null) {
-      setCurrentTime(timeLeft);
-      setIsActive(timeLeft > 0);
-    } else {
-      setCurrentTime(0);
-      setIsActive(false);
-    }
-  }, [roomId]);
-
-  const handleGamePhase = useCallback(({ phase, roomId: phaseRoomId }) => {
-    if (phaseRoomId && phaseRoomId !== roomId) {
-      return;
-    }
-    
-    console.log(`🎮 Phase changed: ${phase}`);
-    setCurrentPhase(phase);
-  }, [roomId]);
-
-  const handleError = useCallback((error) => {
-    console.error(`❌ Timer error:`, error);
-    // You might want to show a toast notification here
-  }, []);
-
-  // Socket event listeners setup
-  useEffect(() => {
-    if (!socket || !roomId || !isConnected) {
-      console.log(`⚠️ Timer setup skipped: socket=${!!socket}, roomId=${roomId}, connected=${isConnected}`);
-      return;
-    }
-
-    console.log(`🔌 Setting up timer socket listeners for room ${roomId}`);
-
-    // Register event listeners with proper callbacks
-    socket.on("timer_update", handleTimerUpdate);
-    socket.on("timer_end", handleTimerEnd);
-    socket.on("timer_started", handleTimerStarted);
-    socket.on("timer_cleared", handleTimerCleared);
-    socket.on("timer_status", handleTimerStatus);
-    socket.on("game_phase", handleGamePhase);
-    socket.on("error", handleError);
-
-    // Request current timer status
-    console.log(`🔍 Requesting timer status for room ${roomId}`);
+    // one-shot status request (optional)
     socket.emit("get_timer_status", { roomId });
 
-    // Cleanup function
     return () => {
-      console.log(`🧹 Cleaning up timer listeners for room ${roomId}`);
-      socket.off("timer_update", handleTimerUpdate);
-      socket.off("timer_end", handleTimerEnd);
-      socket.off("timer_started", handleTimerStarted);
-      socket.off("timer_cleared", handleTimerCleared);
-      socket.off("timer_status", handleTimerStatus);
-      socket.off("game_phase", handleGamePhase);
-      socket.off("error", handleError);
+      socket.off("game_phase", onGamePhase);
+      socket.off("timer_status", onTimerStatus);
     };
-  }, [
-    roomId, 
-    isConnected,
-    handleTimerUpdate,
-    handleTimerEnd,
-    handleTimerStarted,
-    handleTimerCleared,
-    handleTimerStatus,
-    handleGamePhase,
-    handleError
-  ]);
+  }, [roomId, onGamePhase, onTimerStatus]);
 
-  // Format countdown display
-  const formatCountdown = (totalSeconds) => {
-    if (totalSeconds <= 0) {
-      return { hours: 0, minutes: 0, seconds: 0 };
+  // ===== Local countdown via rAF (smooth, low-drift) =====
+  const [, setTick] = useState(0); // dummy to force re-render
+  useEffect(() => {
+    if (!deadline) return;
+    const loop = () => {
+      // stop when 0
+      if (Date.now() >= deadline) {
+        setTick((n) => n + 1);
+        clearCountdown();
+        // Could emit "timer_end" locally if needed:
+        // socket.emit("client_timer_end", { roomId, phase });
+        return;
+      }
+      setTick((n) => n + 1);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [deadline, clearCountdown]);
+
+  // Initial mount: if parent passed `time` or `day`
+  useEffect(() => {
+    if (typeof time === "number" && time > 0) {
+      setDeadline(Date.now() + time * 1000);
+    } else if (day) {
+      // ensure timer exists when component appears with a phase
+      startPhaseCountdown();
     }
-    
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return { hours, minutes, seconds };
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const { hours, minutes, seconds } = formatCountdown(currentTime);
-
-  // Get phase display information
-  const getPhaseInfo = () => {
-    switch (currentPhase) {
+  // ===== UI helpers =====
+  const phaseInfo = useMemo(() => {
+    switch (phase) {
       case "waiting":
-        return { 
-          icon: <Clock className="w-4 h-4" />, 
-          label: "Waiting for Players", 
-          color: "from-gray-500 to-gray-600",
-          bgColor: "bg-gray-500/20",
-          textColor: "text-gray-300"
-        };
+        return { icon: <Clock className="w-4 h-4" />, label: "Waiting", color: "from-gray-500 to-gray-600", bg: "bg-gray-500/20", text: "text-gray-300" };
       case "started":
-        return { 
-          icon: <Play className="w-4 h-4" />, 
-          label: "Game Starting", 
-          color: "from-blue-500 to-purple-500",
-          bgColor: "bg-blue-500/20",
-          textColor: "text-blue-300"
-        };
+        return { icon: <Play className="w-4 h-4" />, label: "Game Starting", color: "from-blue-500 to-purple-500", bg: "bg-blue-500/20", text: "text-blue-300" };
       case "night":
-        return { 
-          icon: <Moon className="w-4 h-4" />, 
-          label: "Night Phase", 
-          color: "from-purple-600 to-indigo-700",
-          bgColor: "bg-purple-500/20",
-          textColor: "text-purple-300"
-        };
+        return { icon: <Moon className="w-4 h-4" />, label: "Night Phase", color: "from-purple-600 to-indigo-700", bg: "bg-purple-500/20", text: "text-purple-300" };
       case "day":
-        return { 
-          icon: <Sun className="w-4 h-4" />, 
-          label: "Day Phase", 
-          color: "from-yellow-400 to-orange-500",
-          bgColor: "bg-yellow-500/20",
-          textColor: "text-yellow-300"
-        };
+        return { icon: <Sun className="w-4 h-4" />, label: "Day Phase", color: "from-yellow-400 to-orange-500", bg: "bg-yellow-500/20", text: "text-yellow-300" };
       case "ended":
-        return { 
-          icon: <Skull className="w-4 h-4" />, 
-          label: "Game Over", 
-          color: "from-red-600 to-red-800",
-          bgColor: "bg-red-500/20",
-          textColor: "text-red-300"
-        };
+        return { icon: <Skull className="w-4 h-4" />, label: "Game Over", color: "from-red-600 to-red-800", bg: "bg-red-500/20", text: "text-red-300" };
       default:
-        return { 
-          icon: <AlertCircle className="w-4 h-4" />, 
-          label: "Loading...", 
-          color: "from-gray-500 to-gray-600",
-          bgColor: "bg-gray-500/20",
-          textColor: "text-gray-300"
-        };
+        return { icon: <AlertCircle className="w-4 h-4" />, label: "Loading...", color: "from-gray-500 to-gray-600", bg: "bg-gray-500/20", text: "text-gray-300" };
     }
-  };
+  }, [phase]);
 
-  const phaseInfo = getPhaseInfo();
+  const timeLeft = getTimeLeft();
+  const m = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const s = String(timeLeft % 60).padStart(2, "0");
+  const urgency = timeLeft <= 0 ? "ended" : timeLeft <= 10 ? "critical" : timeLeft <= 30 ? "warning" : "normal";
 
-  // Timer control functions (host only)
-  const handleStartTimer = (duration = 60) => {
-    if (!isHost || !roomId || !userId || !isConnected) {
-      console.warn(`❌ Cannot start timer: isHost=${isHost}, roomId=${roomId}, userId=${userId}, connected=${isConnected}`);
-      return;
-    }
-    
-    console.log(`⏰ Host starting timer: ${duration}s for room ${roomId}`);
-    socket.emit("start_timer", { 
-      roomId, 
-      duration, 
-      hostId: userId // ✅ Fixed: Use proper userId from Redux
-    });
-  };
-
-  const handleClearTimer = () => {
-    if (!isHost || !roomId || !userId || !isConnected) {
-      console.warn(`❌ Cannot clear timer: isHost=${isHost}, roomId=${roomId}, userId=${userId}, connected=${isConnected}`);
-      return;
-    }
-    
-    console.log(`⏰ Host clearing timer for room ${roomId}`);
-    socket.emit("clear_timer", { roomId, adminId: userId });
-  };
-
-  // Get urgency level for styling
-  const getUrgencyLevel = () => {
-    if (currentTime <= 0) return 'ended';
-    if (currentTime <= 10) return 'critical';
-    if (currentTime <= 30) return 'warning';
-    return 'normal';
-  };
-
-  const urgency = getUrgencyLevel();
-
-  // Timer display component
-  const TimerDisplay = () => {
-    const displayTime = currentTime > 0 ? 
-      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}` :
-      "00:00";
-
-    const pulseClass = urgency === 'critical' ? 'animate-pulse' : '';
-    const scaleClass = urgency === 'warning' ? 'animate-bounce' : '';
-
-    return (
-      <div className={`relative ${pulseClass}`}>
-        <div className={`w-32 h-32 mx-auto bg-gradient-to-r ${phaseInfo.color} rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/20 ${scaleClass}`}>
-          <span className="text-3xl font-bold text-white">
-            {displayTime}
-          </span>
-        </div>
-        {isActive && (
-          <div className="absolute inset-0 w-32 h-32 mx-auto border-4 border-white/20 rounded-full animate-spin-slow"></div>
-        )}
-        {urgency === 'critical' && (
-          <div className="absolute inset-0 w-32 h-32 mx-auto border-4 border-red-400/50 rounded-full animate-ping"></div>
-        )}
-      </div>
-    );
-  };
+  // ===== Host controls (optional) =====
+  const handleManualRestart = () => startPhaseCountdown();
+  const handleStop = () => clearCountdown();
 
   return (
     <div className="p-6 space-y-4">
       <div className="text-center space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-center gap-3">
           <Clock className="w-6 h-6 text-cyan-400" />
           <h3 className="text-lg font-bold text-white">
-            {isActive ? "Time Remaining" : "Timer Inactive"}
+            {timeLeft > 0 ? "Time Remaining" : "Timer Inactive"}
           </h3>
           {isHost && (
-            <button
-              onClick={() => setShowControls(!showControls)}
-              className="ml-2 p-1 rounded hover:bg-white/10 transition-colors"
-              title="Timer Controls (Host)"
-            >
+            <button className="ml-2 p-1 rounded hover:bg-white/10 transition-colors" title="Timer Controls (Host)">
               <Settings className="w-4 h-4 text-yellow-400" />
             </button>
           )}
-          {!isConnected && (
-            <AlertCircle className="w-4 h-4 text-red-400" title="Disconnected" />
-          )}
+          {!connected && <AlertCircle className="w-4 h-4 text-red-400" title="Disconnected" />}
         </div>
 
-        {/* Timer Display */}
-        <TimerDisplay />
+        {/* Timer circle */}
+        <div className={`relative ${urgency === "critical" ? "animate-pulse" : ""}`}>
+          <div className={`w-32 h-32 mx-auto bg-gradient-to-r ${phaseInfo.color} rounded-full flex items-center justify-center shadow-lg shadow-cyan-500/20 ${urgency === "warning" ? "animate-bounce" : ""}`}>
+            <span className="text-3xl font-bold text-white">{m}:{s}</span>
+          </div>
+          {timeLeft > 0 && <div className="absolute inset-0 w-32 h-32 mx-auto border-4 border-white/20 rounded-full animate-spin-slow"></div>}
+          {urgency === "critical" && <div className="absolute inset-0 w-32 h-32 mx-auto border-4 border-red-400/50 rounded-full animate-ping"></div>}
+        </div>
 
-        {/* Phase Indicator */}
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${phaseInfo.bgColor} ${phaseInfo.textColor}`}>
+        {/* Phase badge */}
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${phaseInfo.bg} ${phaseInfo.text}`}>
           {phaseInfo.icon}
           <span>{phaseInfo.label}</span>
         </div>
 
-        {/* Timer Status */}
-        {currentTime > 0 && (
+        {/* Status text */}
+        {timeLeft > 0 && (
           <div className="text-xs text-gray-400">
-            {urgency === 'critical' && "⚠️ Time running out!"}
-            {urgency === 'warning' && "⏰ Less than 30 seconds"}
-            {urgency === 'normal' && `⏱️ ${currentTime} seconds remaining`}
+            {urgency === "critical" && "⚠️ Time running out!"}
+            {urgency === "warning" && "⏰ Less than 30 seconds"}
+            {urgency === "normal" && `⏱️ ${timeLeft} seconds remaining`}
           </div>
         )}
 
-        {/* Connection Status */}
-        {!isConnected && (
-          <div className="text-xs text-red-400">
-            🔌 Disconnected - Timer may not be accurate
-          </div>
-        )}
-
-        {/* Host Controls */}
-        {isHost && showControls && (
+        {/* Host quick actions (optional) */}
+        {isHost && (
           <div className="mt-4 p-3 bg-black/30 rounded-lg space-y-2">
             <div className="text-xs text-gray-400 mb-2">Host Timer Controls</div>
             <div className="flex gap-2 justify-center flex-wrap">
-              <button
-                onClick={() => handleStartTimer(30)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
-                disabled={isActive || !isConnected}
-                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 30 second timer"}
-              >
-                30s
+              <button onClick={handleManualRestart} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors">
+                Restart 30s
               </button>
-              <button
-                onClick={() => handleStartTimer(60)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
-                disabled={isActive || !isConnected}
-                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 1 minute timer"}
-              >
-                1min
-              </button>
-              <button
-                onClick={() => handleStartTimer(180)}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs transition-colors"
-                disabled={isActive || !isConnected}
-                title={!isConnected ? "Disconnected" : isActive ? "Timer already running" : "Start 3 minute timer"}
-              >
-                3min
-              </button>
-              <button
-                onClick={handleClearTimer}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded text-xs transition-colors"
-                disabled={!isActive || !isConnected}
-                title={!isConnected ? "Disconnected" : !isActive ? "No timer running" : "Stop timer"}
-              >
+              <button onClick={handleStop} className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">
                 Stop
               </button>
             </div>
-            {!isConnected && (
-              <div className="text-xs text-red-400 mt-2">
-                ⚠️ Cannot control timer while disconnected
-              </div>
-            )}
           </div>
         )}
 
-        {/* Debug Info (Development only) */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Debug */}
+        {process.env.NODE_ENV === "development" && (
           <div className="mt-4 p-2 bg-black/20 rounded text-xs text-gray-500 space-y-1">
             <div>Room: {roomId}</div>
-            <div>Phase: {currentPhase}</div>
-            <div>Time: {currentTime}s</div>
-            <div>Active: {isActive ? 'Yes' : 'No'}</div>
-            <div>Host: {isHost ? 'Yes' : 'No'}</div>
-            <div>Connected: {isConnected ? 'Yes' : 'No'}</div>
-            <div>UserId: {userId || 'Not available'}</div>
+            <div>Phase: {phase}</div>
+            <div>TimeLeft: {timeLeft}s</div>
+            <div>Connected: {String(connected)}</div>
             <button
               onClick={() => socket?.emit("get_timer_status", { roomId })}
               className="mt-1 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-              disabled={!isConnected}
+              disabled={!connected}
             >
               Refresh Status
             </button>
