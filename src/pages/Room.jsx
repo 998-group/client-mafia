@@ -431,11 +431,11 @@ const Room = () => {
           </div>
 
           {/* Minimum players warning */}
-          {players.length > 0 && players.length < 3 && (
+          {players.length > 0 && players.length < 4 && (
             <div className="text-center bg-yellow-500/10 border border-yellow-400/30 rounded-2xl p-4">
               <div className="flex items-center justify-center gap-2 text-yellow-400">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">Minimum 3 players required to start the game</span>
+                <span className="font-medium">Minimum 4 players required to start the game</span>
               </div>
             </div>
           )}
