@@ -279,9 +279,9 @@ const DiedPeople = ({ players, myRole, roomId }) => {
                   <>
                     {/* 🔍 Detective */}
                     <button
-                      disabled={myRole?.role !== "detective"}
+                      disabled={myRole?.gameRole !== "detective"}
                       onClick={() => handleCheck(u.userId)}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "detective" ? "btn-disabled" : "btn-warning"}`}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.gameRole !== "detective" ? "btn-disabled" : "btn-warning"}`}
                       data-tip="Detect"
                     >
                       <LuUserRoundSearch />
@@ -289,9 +289,9 @@ const DiedPeople = ({ players, myRole, roomId }) => {
 
                     {/* 🔫 Mafia */}
                     <button
-                      disabled={myRole?.role !== "mafia"}
+                      disabled={myRole?.gameRole !== "mafia"}
                       onClick={() => handleKill(u.userId)}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "mafia" ? "btn-disabled" : "btn-error"}`}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.gameRole !== "mafia" ? "btn-disabled" : "btn-error"}`}
                       data-tip="Eliminate"
                     >
                       <GiPistolGun />
@@ -299,9 +299,9 @@ const DiedPeople = ({ players, myRole, roomId }) => {
 
                     {/* 🩺 Doctor */}
                     <button
-                      disabled={myRole?.role !== "doctor"}
+                      disabled={myRole?.gameRole !== "doctor"}
                       onClick={() => handleHeal(u.userId)}
-                      className={`btn btn-xs btn-outline tooltip ${myRole?.role !== "doctor" ? "btn-disabled" : "btn-success"}`}
+                      className={`btn btn-xs btn-outline tooltip ${myRole?.gameRole !== "doctor" ? "btn-disabled" : "btn-success"}`}
                       data-tip="Heal"
                     >
                       <LiaBriefcaseMedicalSolid />

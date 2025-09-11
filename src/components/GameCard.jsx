@@ -3,7 +3,7 @@ import { Eye } from 'lucide-react';
 
 const GameCard = ({ card }) => {
   const [visible, setVisible] = useState(false);
-
+  console.log("card", card);
   useEffect(() => {
     if (!card) return setVisible(false);
 
@@ -55,7 +55,7 @@ console.log("roleImage", roleImage);
           <div className="w-24 h-24 rounded-xl overflow-hidden border-4 border-white/20 shadow-md">
             <img
               src={roleImage}
-              alt={card?.role}
+              alt={card?.gameRole}
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.src = "https://cdn-icons-png.flaticon.com/512/565/565547.png";

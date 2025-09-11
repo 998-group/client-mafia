@@ -212,21 +212,7 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
         )}
 
         {/* Debug */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="mt-4 p-2 bg-black/20 rounded text-xs text-gray-500 space-y-1">
-            <div>Room: {roomId}</div>
-            <div>Phase: {phase}</div>
-            <div>TimeLeft: {timeLeft}s</div>
-            <div>Connected: {String(connected)}</div>
-            <button
-              onClick={() => socket?.emit("get_timer_status", { roomId })}
-              className="mt-1 px-2 py-1 bg-blue-500 text-white rounded text-xs"
-              disabled={!connected}
-            >
-              Refresh Status
-            </button>
-          </div>
-        )}
+        
       </div>
     </div>
   );
