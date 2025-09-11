@@ -30,7 +30,7 @@ const GameCard = ({ card }) => {
     peaceful: "/unnamed(3).jpg",
   };
   
-  let roleImage = roleImages[card.role] || card.img;
+  let roleImage = roleImages[card.gameRole] || card.img;
   
 
   console.log("card", card);
@@ -70,8 +70,8 @@ console.log("roleImage", roleImage);
 
         {/* Role Info */}
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold capitalize text-white">{card.role}</h2>
-          <p className="text-white/70 text-sm leading-relaxed">{card.title}</p>
+          <h2 className="text-xl font-bold capitalize text-white">{card?.gameRole}</h2>
+          <p className="text-white/70 text-sm leading-relaxed">{card?.title}</p>
         </div>
 
         {/* Role Tag */}

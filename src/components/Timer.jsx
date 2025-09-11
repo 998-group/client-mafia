@@ -105,8 +105,8 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
       if (Date.now() >= deadline) {
         setTick((n) => n + 1);
         clearCountdown();
-        // Could emit "timer_end" locally if needed:
-        // socket.emit("client_timer_end", { roomId, phase });
+        socket.emit("client_timer_end", { roomId, phase });
+        console.log("ROOMID: ", roomId)
         return;
       }
       setTick((n) => n + 1);
@@ -212,7 +212,7 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
         )}
 
         {/* Debug */}
-        
+
       </div>
     </div>
   );
