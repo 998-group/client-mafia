@@ -14,29 +14,32 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
   const [phase, setPhase] = useState(day || "waiting");
   const [connected, setConnected] = useState(socket?.connected ?? false);
 
-  // deadline = timestamp (ms) when phase should end
+  // ===== Internal timer state =====
   const [deadline, setDeadline] = useState(null);
   const rafRef = useRef(null);
-  const lastPhaseRef = useRef(phase);
+  const emittedRef = useRef(false); // 0 ga tushganda emit faqat bir marta
+  const [, force] = useState(0); // re-render trigger
 
-  // ===== Helpers =====
-  const startPhaseCountdown = useCallback((ms = PHASE_DURATION) => {
-    setDeadline(Date.now() + ms);
-  }, []);
-
-  const clearCountdown = useCallback(() => {
-    setDeadline(null);
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-  }, []);
-
-  const getTimeLeft = useCallback(() => {
+  // --- format helpers ---
+  const pad = (n) => String(n).padStart(2, "0");
+  const getTimeLeftSec = useCallback(() => {
     if (!deadline) return 0;
     return Math.max(0, Math.floor((deadline - Date.now()) / 1000));
   }, [deadline]);
 
-  const isActive = useMemo(() => getTimeLeft() > 0, [getTimeLeft]);
+  // --- start/stop controls (UI dagi tugmalar uchun) ---
+  const handleManualRestart = useCallback(() => {
+    emittedRef.current = false;
+    setDeadline(Date.now() + PHASE_DURATION);
+  }, []);
+  const handleStop = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    setDeadline(null);
+    emittedRef.current = false;
+  }, []);
 
-  // ===== Socket connection status =====
+  // --- socket connect indicator ---
   useEffect(() => {
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
@@ -48,88 +51,83 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
     };
   }, []);
 
-  // ===== Phase from props (SSR/hydration or parent control) =====
-  useEffect(() => {
-    if (!day) return;
-    if (day !== lastPhaseRef.current) {
-      setPhase(day);
-      startPhaseCountdown(); // always restart 30s when prop-phase changes
-      lastPhaseRef.current = day;
-    }
-  }, [day, startPhaseCountdown]);
-
-  // ===== Socket listeners =====
-  const onGamePhase = useCallback(
-    ({ phase: newPhase, roomId: phaseRoomId }) => {
-      if (phaseRoomId && phaseRoomId !== roomId) return;
-      setPhase((prev) => {
-        lastPhaseRef.current = newPhase;
-        return newPhase || prev;
-      });
-      startPhaseCountdown(); // restart 30s on every phase change
-    },
-    [roomId, startPhaseCountdown]
-  );
-
-  // Optional server timer syncs (kept for future use)
-  const onTimerStatus = useCallback(
-    ({ roomId: statusRoomId, timeLeft, hasTimer }) => {
-      if (statusRoomId !== roomId) return;
-      if (hasTimer && typeof timeLeft === "number") {
-        setDeadline(Date.now() + timeLeft * 1000);
-      }
-    },
-    [roomId]
-  );
-
-  useEffect(() => {
-    if (!socket || !roomId) return;
-    socket.on("game_phase", onGamePhase);
-    socket.on("timer_status", onTimerStatus);
-
-    // one-shot status request (optional)
-    socket.emit("get_timer_status", { roomId });
-
-    return () => {
-      socket.off("game_phase", onGamePhase);
-      socket.off("timer_status", onTimerStatus);
-    };
-  }, [roomId, onGamePhase, onTimerStatus]);
-
-  // ===== Local countdown via rAF (smooth, low-drift) =====
-  const [, setTick] = useState(0); // dummy to force re-render
-  useEffect(() => {
-    if (!deadline) return;
-    const loop = () => {
-      // stop when 0
-      if (Date.now() >= deadline) {
-        setTick((n) => n + 1);
-        clearCountdown();
-        socket.emit("client_timer_end", { roomId, phase });
-        console.log("ROOMID: ", roomId)
-        return;
-      }
-      setTick((n) => n + 1);
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [deadline, clearCountdown]);
-
-  // Initial mount: if parent passed `time` or `day`
+  // --- initial start: hozirgi vaqtdan 30s yoki prop time ---
   useEffect(() => {
     if (typeof time === "number" && time > 0) {
       setDeadline(Date.now() + time * 1000);
-    } else if (day) {
-      // ensure timer exists when component appears with a phase
-      startPhaseCountdown();
+      emittedRef.current = false;
+    } else {
+      setDeadline(Date.now() + PHASE_DURATION);
+      emittedRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [time]);
 
-  // ===== UI helpers =====
+  // --- agar parent phase (day) o'zgarsa, faqat label yangilaymiz ---
+  useEffect(() => {
+    if (!day) return;
+    setPhase(day);
+  }, [day]);
+
+  // --- SOCKET: update_phase kelganda fazani yangilab, timer’ni 30s ga qayta ishga tushiramiz ---
+  useEffect(() => {
+    const onUpdatePhase = (payload) => {
+      // payload { phase, roomId? } yoki string bo‘lishi mumkin
+      const newPhase = typeof payload === "string" ? payload : payload?.phase;
+      const r = typeof payload === "object" ? payload?.roomId : undefined;
+
+      // agar server roomId yuborsa, tekshirib olaylik
+      if (r && r !== roomId) return;
+
+      if (newPhase) {
+        setPhase(newPhase);
+        if (newPhase === "ended") {
+          // ended bo'lsa to'xtatamiz
+          handleStop();
+        } else {
+          // har safar 30s dan qayta start
+          emittedRef.current = false;
+          setDeadline(Date.now() + PHASE_DURATION);
+        }
+      }
+    };
+
+    socket.on("update_phase", onUpdatePhase);
+    return () => {
+      socket.off("update_phase", onUpdatePhase);
+    };
+  }, [roomId, handleStop]);
+
+  // --- rAF loop: 30s pasaytirish va 0 da emit (client_timer_end) ---
+  useEffect(() => {
+    if (!deadline) return;
+
+    const tick = () => {
+      const left = deadline - Date.now();
+      if (left <= 0) {
+        // stop loop
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+
+        // emit faqat bir marta
+        if (!emittedRef.current) {
+          emittedRef.current = true;
+          socket.emit("client_timer_end", { roomId, phase }); // <--- KERAKLI EMIT
+        }
+        return;
+      }
+
+      // UI ni yangilash
+      force((n) => n + 1);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [deadline, roomId, phase]);
+
+  // --- UI helpers (dizaynni saqlab qolish uchun) ---
   const phaseInfo = useMemo(() => {
     switch (phase) {
       case "waiting":
@@ -147,14 +145,10 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
     }
   }, [phase]);
 
-  const timeLeft = getTimeLeft();
-  const m = String(Math.floor(timeLeft / 60)).padStart(2, "0");
-  const s = String(timeLeft % 60).padStart(2, "0");
+  const timeLeft = getTimeLeftSec();
+  const m = pad(Math.floor(timeLeft / 60));
+  const s = pad(timeLeft % 60);
   const urgency = timeLeft <= 0 ? "ended" : timeLeft <= 10 ? "critical" : timeLeft <= 30 ? "warning" : "normal";
-
-  // ===== Host controls (optional) =====
-  const handleManualRestart = () => startPhaseCountdown();
-  const handleStop = () => clearCountdown();
 
   return (
     <div className="p-6 space-y-4">
@@ -165,7 +159,7 @@ const Timer = ({ roomId, day, time, isHost = false }) => {
             {timeLeft > 0 ? "Time Remaining" : "Timer Inactive"}
           </h3>
           {isHost && (
-            <button className="ml-2 p-1 rounded hover:bg-white/10 transition-colors" title="Timer Controls (Host)">
+            <button className="ml-2 p-1 rounded hover:bg-white/10 transition-colors" title="Timer Controls (Host)" onClick={(e)=>e.stopPropagation()}>
               <Settings className="w-4 h-4 text-yellow-400" />
             </button>
           )}
