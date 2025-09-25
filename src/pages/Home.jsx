@@ -17,7 +17,7 @@ const Home = () => {
 
   const getAllUsers = async () => {
     try {
-      const request = await fetch("http://localhost:5000/api/auth/users/all", {
+      const request = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/users/all`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

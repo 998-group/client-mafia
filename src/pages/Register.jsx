@@ -32,7 +32,7 @@ const Register = () => {
     console.log('✅ Form valid, sending to backend:', formData);
     // bu yerga API chaqiruv yozish mumkin
     try {
-      const request = await fetch('http://localhost:5000/api/auth/register', {
+      const request = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
