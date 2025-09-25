@@ -46,7 +46,6 @@ const Game = () => {
 
 
   useEffect(() => {
-
     const handleUpdatePlayers = (playersFromServer) => {
       setPlayers(playersFromServer || []);
     };
